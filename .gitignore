@@ -8,3 +8,5 @@ coverage/
 !.env.example
 elvera-57-pos.zip
 metadata.json
+.env
+.env.local

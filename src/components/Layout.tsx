@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Home, Package, UtensilsCrossed, Users, Bell } from "lucide-react";
+import { Home, Package, UtensilsCrossed, Users, Bell, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
+  const { canInstall, installApp } = usePWAInstall();
+  
   const menuGroups = [
     {
       title: "OPERASIONAL",
@@ -79,7 +82,17 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           ))}
         </nav>
 
-        <div className="p-6 border-t border-slate-50">
+        <div className="p-6 space-y-4 border-t border-slate-50">
+          {canInstall && (
+            <button 
+              onClick={installApp}
+              className="flex items-center gap-3 w-full px-4 py-3 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100/50"
+            >
+              <Download className="w-4 h-4" />
+              Install App
+            </button>
+          )}
+
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
             <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold text-xs">
               AD
@@ -103,6 +116,14 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            {canInstall && (
+              <button 
+                onClick={installApp}
+                className="p-2 bg-emerald-50 text-emerald-600 rounded-full hover:bg-emerald-100 transition-colors border border-emerald-100"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            )}
             <button className="p-2 hover:bg-slate-100 rounded-full transition-colors relative">
               <Bell className="w-5 h-5 text-slate-500" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
