@@ -11,9 +11,28 @@
 
     <!-- Registrasi Service Worker -->
     <script>
+      // Force Service Worker Update Logic
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js');
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('SW Registered: v1.0.2');
+            
+            // Check for updates every page load
+            reg.update();
+
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed') {
+                  if (navigator.serviceWorker.controller) {
+                    // New update available
+                    console.log('New content available; please refresh.');
+                    // Optional: window.location.reload(); 
+                  }
+                }
+              };
+            };
+          }).catch(err => console.log('SW Reg failed:', err));
         });
       }
     </script>
