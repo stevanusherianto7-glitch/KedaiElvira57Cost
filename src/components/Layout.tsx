@@ -119,12 +119,18 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
             {canInstall && (
               <button 
                 onClick={installApp}
+                aria-label="Install App"
+                title="Install App"
                 className="p-2 bg-emerald-50 text-emerald-600 rounded-full hover:bg-emerald-100 transition-colors border border-emerald-100"
               >
                 <Download className="w-5 h-5" />
               </button>
             )}
-            <button className="p-2 hover:bg-slate-100 rounded-full transition-colors relative">
+            <button 
+              aria-label="Notifications"
+              title="Notifications"
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors relative"
+            >
               <Bell className="w-5 h-5 text-slate-500" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
