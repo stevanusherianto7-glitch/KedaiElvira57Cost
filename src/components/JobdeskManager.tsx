@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useRef } from "react";
 import { 
   Plus, 
   Search, 
@@ -105,6 +106,9 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isMenuOpen, setIsMenuOpen] = React.useState(true);
   
+  const gridRef = useRef<HTMLDivElement>(null);
+  const patternRef = useRef<HTMLDivElement>(null);
+
   const monthDates = React.useMemo(() => 
     generateMonthDates(currentDate.getFullYear(), currentDate.getMonth()), 
     [currentDate]
@@ -493,14 +497,14 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
               currentDate={currentDate}
               onPreviousMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
               onNextMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-              onExportPDF={() => pdfService.handleExportShiftPDF(employees, shifts, monthDates, currentDate)}
-              onExportWeeklyPDF={() => pdfService.handleExportPatternPDF(employees, weeklyPattern)}
+              onExportPDF={() => pdfService.handleExportShiftPDF(gridRef, currentDate)}
+              onExportWeeklyPDF={() => pdfService.handleExportPatternPDF(patternRef)}
               view={schedulerView}
               onViewChange={setSchedulerView}
             />
 
             {schedulerView === 'grid' ? (
-              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl p-4 sm:p-8 overflow-hidden">
+              <div ref={gridRef} className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl p-4 sm:p-8 overflow-hidden">
                 <ScheduleGrid 
                   employees={employees}
                   shifts={shifts}
@@ -509,14 +513,16 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                 />
               </div>
             ) : (
-              <PatternManager 
-                employees={employees}
-                initialPattern={weeklyPattern}
-                onSavePattern={setWeeklyPattern}
-                onApplyPattern={handleApplyPattern}
-                onBack={() => setSchedulerView('grid')}
-                currentDate={currentDate}
-              />
+              <div ref={patternRef}>
+                <PatternManager 
+                  employees={employees}
+                  initialPattern={weeklyPattern}
+                  onSavePattern={setWeeklyPattern}
+                  onApplyPattern={handleApplyPattern}
+                  onBack={() => setSchedulerView('grid')}
+                  currentDate={currentDate}
+                />
+              </div>
             )}
           </div>
         )}

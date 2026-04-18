@@ -362,129 +362,89 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   saveBlob(pdf, `closing-report-${new Date().toLocaleDateString()}.pdf`);
 };
 
-export const handleExportShiftPDF = (employees: Employee[], shifts: Record<string, Record<string, ShiftType>>, monthDates: { dateStr: string; dayName: string; dayNum: string }[], currentDate: Date) => {
+export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivElement>, currentDate: Date) => {
+  if (!gridRef.current) return;
+
+  const canvas = await html2canvas(gridRef.current, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+  
+  const imgData = canvas.toDataURL("image/png");
   const doc = new jsPDF('l', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const periodString = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+  // 1. Header (Method 1)
   doc.setFontSize(18);
   doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
   doc.text("Jadwal Shift Karyawan Pawon Salam Resto", 14, 15);
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'normal');
   doc.text(`Periode: ${periodString}`, 14, 22);
 
-  const tableHead = [
-    [
-      { content: 'Nama', styles: { halign: 'left', fontStyle: 'bold', valign: 'middle' } },
-      { content: 'Role', styles: { halign: 'left', fontStyle: 'bold', valign: 'middle' } },
-      ...monthDates.map(d => {
-        const isWeekend = d.dayName === 'MIN' || d.dayName === 'SAB';
-        const fillColor: [number, number, number] = isWeekend ? [254, 202, 202] : [241, 245, 249];
-        const textColor: [number, number, number] = isWeekend ? [127, 29, 29] : [51, 65, 85];
-        return {
-          content: `${d.dayName}\n${d.dayNum}`,
-          styles: { 
-            halign: 'center', valign: 'middle', fontSize: 6, fontStyle: 'bold',
-            fillColor,
-            textColor,
-          } 
-        };
-      })
-    ]
-  ];
-  
-  const tableBody = employees.map(emp => {
-    return [
-      { content: emp.name.toUpperCase(), styles: { fontStyle: 'bold' } },
-      { content: emp.role.toUpperCase(), styles: { fontSize: 7 } },
-      ...monthDates.map(date => {
-        const shift = shifts[emp.id]?.[date.dateStr] || ShiftType.LIBUR;
-        const config = SHIFT_CONFIGS[shift];
-        let fillColor: [number, number, number] = [255, 255, 255];
-        if (shift === ShiftType.PAGI) fillColor = [59, 130, 246];
-        if (shift === ShiftType.MIDDLE) fillColor = [34, 197, 94];
-        if (shift === ShiftType.LIBUR) fillColor = [239, 68, 68];
-        return {
-          content: config.code,
-          styles: { halign: 'center', fillColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 6 }
-        };
-      })
-    ];
-  });
+  // 2. Table Image (Method 2)
+  const imgWidth = pageWidth - 28;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  doc.addImage(imgData, 'PNG', 14, 30, imgWidth, imgHeight);
 
-  autoTable(doc, {
-    head: tableHead as any, body: tableBody as any, startY: 35, theme: 'grid',
-    styles: { fontSize: 8, cellPadding: 1.2, valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1 },
-    headStyles: { fillColor: [255, 255, 255], textColor: [30, 41, 59], lineColor: [203, 213, 225], lineWidth: 0.2, minCellHeight: 10 },
-    columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 15 } },
-    didDrawPage: (data) => {
-      const pageSize = doc.internal.pageSize;
-      const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
-      const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-      
-      // Footer Branding - Pawon Salam Resto (Italic, 11pt)
-      doc.setFontSize(11);
-      doc.setTextColor(100, 116, 139);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
-      
-      // Page Number
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
-      doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
-    }
-  });
+  // 3. Footer Branding (Method 1)
+  doc.setFontSize(11);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const pageNumber = "Halaman 1";
+  doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
   
   saveBlob(doc, `Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
 };
 
-export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>) => {
+export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDivElement>) => {
+  if (!patternRef.current) return;
+
+  const canvas = await html2canvas(patternRef.current, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+  
+  const imgData = canvas.toDataURL("image/png");
   const doc = new jsPDF('l', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // 1. Header (Method 1)
   doc.setFontSize(18);
   doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
   doc.text("Pola Jadwal Mingguan Standar", 14, 15);
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'normal');
   doc.text("Pawon Salam Resto", 14, 22);
 
-  const daysOfWeek = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
-  const tableHead = [[
-    'Nama', 'Role', 'MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'
-  ]];
+  // 2. Table Image (Method 2)
+  const imgWidth = pageWidth - 28;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  doc.addImage(imgData, 'PNG', 14, 30, imgWidth, imgHeight);
 
-  const tableBody = employees.map(emp => {
-    const pattern = weeklyPattern[emp.id] || Array(7).fill(ShiftType.LIBUR);
-    return [
-      emp.name.toUpperCase(), 
-      emp.role.toUpperCase(), 
-      ...pattern.map(p => SHIFT_CONFIGS[p].code)
-    ];
-  });
-
-  autoTable(doc, {
-    head: tableHead,
-    body: tableBody,
-    startY: 35,
-    theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 3 },
-    didDrawPage: (data) => {
-      const pageSize = doc.internal.pageSize;
-      const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
-      const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-      
-      // Footer Branding - Pawon Salam Resto (Italic, 11pt)
-      doc.setFontSize(11);
-      doc.setTextColor(100, 116, 139);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
-      
-      // Page Number
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
-      doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
-    }
-  });
+  // 3. Footer Branding (Method 1)
+  doc.setFontSize(11);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const pageNumber = "Halaman 1";
+  doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
 
   saveBlob(doc, `Pola_Jadwal_Mingguan.pdf`);
 };
