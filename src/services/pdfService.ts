@@ -36,68 +36,72 @@ const hideLoadingOverlay = (overlay: HTMLElement | null) => {
 };
 
 const applyOklchFix = (clonedDoc: Document) => {
+  const clonedWindow = clonedDoc.defaultView;
+  if (clonedWindow) {
+    const originalGetComputedStyle = clonedWindow.getComputedStyle;
+    clonedWindow.getComputedStyle = function(el, pseudoElt) {
+      const style = originalGetComputedStyle.call(clonedWindow, el, pseudoElt);
+      
+      return new Proxy(style, {
+        get(target, prop) {
+          if (prop === 'getPropertyValue') {
+            return function(property: string) {
+              const val = target.getPropertyValue(property);
+              if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('color(') || val.includes('var('))) {
+                if (property.includes('background')) return 'rgb(255, 255, 255)';
+                if (property.includes('color') || property.includes('border') || property.includes('outline')) return 'rgb(15, 23, 42)';
+                return 'none';
+              }
+              return val;
+            };
+          }
+          
+          const val = target[prop as keyof CSSStyleDeclaration];
+          if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('color(') || val.includes('var('))) {
+            const propStr = prop.toString().toLowerCase();
+            if (propStr.includes('bg') || propStr.includes('background')) return 'rgb(255, 255, 255)';
+            if (propStr.includes('color') || propStr.includes('border') || propStr.includes('outline')) return 'rgb(15, 23, 42)';
+            return 'none';
+          }
+          
+          if (typeof val === 'function') {
+            return val.bind(target);
+          }
+          
+          return val;
+        }
+      });
+    };
+  }
+
+  // Workaround Khusus untuk Efek Radial/Visual Kompleks
   const elements = clonedDoc.querySelectorAll('*');
   elements.forEach((el) => {
     if (el instanceof HTMLElement) {
       try {
-        const style = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
-        
-        // Save current styles to override safely
-        const currentBg = style.backgroundColor;
-        const currentColor = style.color;
-        const currentBorder = style.borderColor;
-
-        const isUnsupportedColor = (cssVal: string | null) => {
-          if (!cssVal) return false;
-          return cssVal.includes('oklch') || cssVal.includes('oklab') || cssVal.includes('color(') || cssVal.includes('var(');
-        };
-
-        if (isUnsupportedColor(currentColor)) {
-            el.style.color = '#0f172a'; // fallback
-        } else if (currentColor) {
-            el.style.color = currentColor;
-        }
-
-        if (isUnsupportedColor(currentBg)) {
-            el.style.backgroundColor = '#ffffff'; 
-        } else if (currentBg) {
-            el.style.backgroundColor = currentBg;
-        }
-        
-        if (isUnsupportedColor(currentBorder)) {
-            el.style.borderColor = '#e2e8f0';
-        } else if (currentBorder) {
-            el.style.borderColor = currentBorder;
-        }
-
-        // WORKAROUND UNTUK HTML2CANVAS CRASH:
-        // Hapus filter complex (seperti drop-shadow) yang membuat parsing html2canvas gagal total
-        el.style.filter = 'none';
-        
-        // Hapus radial gradient dan box shadow kompleks pada bola shift
-        if (el.classList.contains('sphere-blue')) {
-          el.style.background = '#3b82f6';
-          el.style.backgroundColor = '#3b82f6';
-          el.style.boxShadow = 'none';
-          el.style.border = 'none';
-        } else if (el.classList.contains('sphere-green')) {
-          el.style.background = '#10b981';
-          el.style.backgroundColor = '#10b981';
-          el.style.boxShadow = 'none';
-          el.style.border = 'none';
-        } else if (el.classList.contains('sphere-red')) {
-          el.style.background = '#ef4444';
-          el.style.backgroundColor = '#ef4444';
-          el.style.boxShadow = 'none';
-          el.style.border = 'none';
-        }
-        
-        if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
-          el.style.display = 'none';
-        }
-      } catch (e) {
-        // Silently catch styling errors so it doesn't crash the entire PDF branch
-      }
+         el.style.filter = 'none'; // Hapus filter yang berpotensi memicu fail-point
+         
+         if (el.classList.contains('sphere-blue')) {
+           el.style.background = '#3b82f6';
+           el.style.backgroundColor = '#3b82f6';
+           el.style.boxShadow = 'none';
+           el.style.border = 'none';
+         } else if (el.classList.contains('sphere-green')) {
+           el.style.background = '#10b981';
+           el.style.backgroundColor = '#10b981';
+           el.style.boxShadow = 'none';
+           el.style.border = 'none';
+         } else if (el.classList.contains('sphere-red')) {
+           el.style.background = '#ef4444';
+           el.style.backgroundColor = '#ef4444';
+           el.style.boxShadow = 'none';
+           el.style.border = 'none';
+         }
+         
+         if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
+           el.style.display = 'none';
+         }
+      } catch (e) {}
     }
   });
 };
