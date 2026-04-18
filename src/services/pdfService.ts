@@ -406,18 +406,15 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   }
 };
 
-export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivElement>, currentDate: Date) => {
-  if (!gridRef.current) return;
+export const handleExportShiftPDF = (
+  employees: Employee[], 
+  shifts: Record<string, Record<string, ShiftType>>, 
+  dates: { dateStr: string; dayName: string; dayNum: string }[], 
+  currentDate: Date
+) => {
+  if (!employees.length) return;
   const overlay = showLoadingOverlay();
   try {
-    const parentWidth = gridRef.current.offsetWidth;
-    const parentHeight = gridRef.current.offsetHeight;
-
-    const imgData = await toPng(gridRef.current, {
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
-    });
-    
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -433,18 +430,41 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
     doc.setFont('helvetica', 'normal');
     doc.text(`Periode: ${periodString}`, 14, 22);
 
-    // Table Auto-Scaling
-    const margin = 14;
-    const maxImgWidth = pageWidth - (margin * 2);
-    const maxImgHeight = pageHeight - 45;
-    let imgWidth = maxImgWidth;
-    let imgHeight = (parentHeight * imgWidth) / parentWidth;
-    if (imgHeight > maxImgHeight) {
-      imgHeight = maxImgHeight;
-      imgWidth = (parentWidth * imgHeight) / parentHeight;
-    }
-    const xPos = (pageWidth - imgWidth) / 2;
-    doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
+    // Build Data table
+    const headRow = ['Nama Karyawan', ...dates.map(d => `${d.dayNum}`)];
+    const bodyRows = employees.map(emp => {
+      const row = [emp.name.toUpperCase()];
+      dates.forEach(day => {
+        const shiftType = shifts[emp.id]?.[day.dateStr] || ShiftType.LIBUR;
+        // Gunakan mapping code P, M, O dari config (fallback P,M,O jika tidak terdaftar)
+        const code = SHIFT_CONFIGS[shiftType]?.code || 'O';
+        row.push(code);
+      });
+      return row;
+    });
+
+    const dayNameRow = ['Hari', ...dates.map(d => d.dayName)];
+
+    autoTable(doc, {
+      startY: 28,
+      head: [dayNameRow, headRow],
+      body: bodyRows,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center', fontSize: 6, cellPadding: 1 },
+      bodyStyles: { halign: 'center', fontSize: 6, cellPadding: 1 },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 30, fontStyle: 'bold' }
+      },
+      styles: { textColor: [30, 41, 59] },
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index > 0) {
+           const val = data.cell.raw;
+           if (val === 'P') data.cell.styles.textColor = [37, 99, 235]; // Blue
+           else if (val === 'M') data.cell.styles.textColor = [5, 150, 105]; // Green
+           else if (val === 'O') data.cell.styles.textColor = [220, 38, 38]; // Red
+        }
+      }
+    });
 
     // Footer
     doc.setFontSize(11);
@@ -465,18 +485,10 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
   }
 };
 
-export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDivElement>) => {
-  if (!patternRef.current) return;
+export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>) => {
+  if (!employees.length) return;
   const overlay = showLoadingOverlay();
   try {
-    const parentWidth = patternRef.current.offsetWidth;
-    const parentHeight = patternRef.current.offsetHeight;
-
-    const imgData = await toPng(patternRef.current, {
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
-    });
-    
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -490,17 +502,47 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
     doc.setFont('helvetica', 'normal');
     doc.text("Pawon Salam Resto", 14, 22);
 
-    const margin = 14;
-    const maxImgWidth = pageWidth - (margin * 2);
-    const maxImgHeight = pageHeight - 45; 
-    let imgWidth = maxImgWidth;
-    let imgHeight = (parentHeight * imgWidth) / parentWidth;
-    if (imgHeight > maxImgHeight) {
-      imgHeight = maxImgHeight;
-      imgWidth = (parentWidth * imgHeight) / parentHeight;
-    }
-    const xPos = (pageWidth - imgWidth) / 2;
-    doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
+    // Build Weekly Data Table
+    const headRow = ['Nama Karyawan', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const bodyRows = employees.map(emp => {
+      const row = [emp.name.toUpperCase()];
+      const empPattern = weeklyPattern[emp.id] || weeklyPattern['default'] || Array(7).fill(ShiftType.LIBUR);
+      
+      // Data structure index for days matching mapping logic in JS: 
+      // Array in Pattern => 0 = Sunday, 1 = Monday, etc. or generated sequence
+      // In JS new Date().getDay() returns 0 for Sunday
+      // The WeeklyPatternBuilder UI uses `['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN']`
+      // So indices usually are 1(Mon)-6(Sat), 0(Sun)
+      // We will loop through [1, 2, 3, 4, 5, 6, 0] to match Mon-Sun
+      const displayIndices = [1, 2, 3, 4, 5, 6, 0];
+      displayIndices.forEach(idx => {
+         const shiftType = empPattern[idx] || ShiftType.LIBUR;
+         const code = SHIFT_CONFIGS[shiftType]?.code || 'O';
+         row.push(code);
+      });
+      return row;
+    });
+
+    autoTable(doc, {
+      startY: 28,
+      head: [headRow],
+      body: bodyRows,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+      bodyStyles: { halign: 'center', fontSize: 9 },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 50, fontStyle: 'bold' }
+      },
+      styles: { textColor: [30, 41, 59] },
+      didParseCell: function(data) {
+        if (data.section === 'body' && data.column.index > 0) {
+           const val = data.cell.raw;
+           if (val === 'P') data.cell.styles.textColor = [37, 99, 235];
+           else if (val === 'M') data.cell.styles.textColor = [5, 150, 105];
+           else if (val === 'O') data.cell.styles.textColor = [220, 38, 38];
+        }
+      }
+    });
 
     doc.setFontSize(11);
     doc.setTextColor(148, 163, 184);

@@ -497,8 +497,8 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
               currentDate={currentDate}
               onPreviousMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
               onNextMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-              onExportPDF={() => pdfService.handleExportShiftPDF(gridRef, currentDate)}
-              onExportWeeklyPDF={() => pdfService.handleExportPatternPDF(patternRef)}
+              onExportPDF={() => pdfService.handleExportShiftPDF(employees, shifts, monthDates, currentDate)}
+              onExportWeeklyPDF={() => pdfService.handleExportPatternPDF(employees, weeklyPattern)}
               view={schedulerView}
               onViewChange={setSchedulerView}
             />
