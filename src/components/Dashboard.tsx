@@ -60,7 +60,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-        <Card className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+        <Card className="premium-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
@@ -73,7 +73,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+        <Card className="premium-card">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center group-hover:bg-rose-500 transition-colors">
@@ -108,7 +108,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             ) : (
               ingredients.filter(i => i.stockQuantity <= i.lowStockThreshold).map(ing => (
-                <Card key={ing.id} className="border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all">
+                <Card key={ing.id} className="premium-card">
                   <div className="p-6 flex flex-col justify-between h-full gap-4">
                     <div className="space-y-1">
                       <h3 className="text-lg font-bold text-slate-900">{ing.name}</h3>

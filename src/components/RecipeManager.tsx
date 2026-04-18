@@ -949,7 +949,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
               <Tooltip key={recipe.id}>
                 <TooltipTrigger render={
                   <Card 
-                    className="border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all group rounded-xl cursor-pointer"
+                    className="premium-card relative group"
                     onClick={() => setSelectedRecipe(recipe)}
                   >
                     <div className="p-3 space-y-3">

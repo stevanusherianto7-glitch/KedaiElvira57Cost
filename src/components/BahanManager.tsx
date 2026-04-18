@@ -341,7 +341,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                   setViewMode('ingredient-list');
                   setSelectedRecipeId(recipe.id);
                 }}
-                className="group cursor-pointer border-none shadow-sm bg-white hover:shadow-md hover:-translate-y-1 transition-all rounded-xl overflow-hidden"
+                className="premium-card relative group"
               >
                 <div className="p-3 space-y-2">
                   <div className="flex items-center justify-between">
@@ -391,7 +391,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
             {filteredIngredients.map(ing => (
-              <Card key={ing.id} className="border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all group rounded-xl">
+              <Card key={ing.id} className="premium-card relative group">
                 <div className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center group-hover:bg-emerald-50 transition-colors">

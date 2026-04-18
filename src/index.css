@@ -225,6 +225,26 @@
   background: #cbd5e1; /* slate-300 */
 }
 
+/* Premium Floating Cards - God Mode Standard */
+.premium-card {
+  @apply bg-white border border-slate-200/50 rounded-3xl transition-all duration-500 cursor-pointer overflow-hidden;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.04), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.premium-card:hover {
+  @apply -translate-y-2 border-indigo-200/50;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.08),
+    0 15px 15px -5px rgba(0, 0, 0, 0.03);
+}
+
+.premium-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity;
+}
+
 /* SDM Dashboard Cards - God Mode High Contrast */
 .sdm-dashboard-card {
   @apply relative overflow-hidden bg-white border border-slate-200/50 rounded-[2.5rem] p-10 transition-all duration-500 cursor-pointer;
