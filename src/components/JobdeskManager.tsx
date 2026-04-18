@@ -265,6 +265,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
       <div className="flex items-center gap-6 mb-10">
         <button 
           onClick={backToMenu}
+          title="Kembali ke Dashboard"
           className="w-12 h-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 hover:text-slate-900 hover:shadow-md transition-all active:scale-90"
         >
           <ChevronLeft size={24} />

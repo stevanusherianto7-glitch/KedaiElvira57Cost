@@ -242,6 +242,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setSelectedRecipe(null)}
+            title="Kembali ke Daftar Resep"
             className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all"
           >
             <ChevronLeft className="w-6 h-6 text-slate-400" />
@@ -292,6 +293,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
                             className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm"
                             value={selectedIngredientForRecipe}
                             onChange={(e) => setSelectedIngredientForRecipe(e.target.value)}
+                            title="Pilih Bahan"
                           >
                             <option value="">-- Pilih Bahan Baku --</option>
                             {ingredients.map(ing => (

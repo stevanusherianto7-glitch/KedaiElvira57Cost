@@ -143,6 +143,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                   setViewMode('menu-list');
                   setSelectedRecipeId(null);
                 }}
+                title="Kembali ke Daftar Menu"
                 className="p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-400 hover:text-emerald-600 transition-all active:scale-95"
               >
                 <ArrowRight className="w-5 h-5 rotate-180" />
@@ -204,6 +205,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                       className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm"
                       value={newIngredient.category}
                       onChange={(e) => setNewIngredient({...newIngredient, category: e.target.value})}
+                      title="Pilih Kategori"
                     >
                       {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
@@ -233,6 +235,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                       className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm"
                       value={newIngredient.purchaseUnit}
                       onChange={(e) => setNewIngredient({...newIngredient, purchaseUnit: e.target.value as Unit})}
+                      title="Satuan Beli"
                     >
                       {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
@@ -243,6 +246,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                       className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-sm"
                       value={newIngredient.useUnit}
                       onChange={(e) => setNewIngredient({...newIngredient, useUnit: e.target.value as Unit})}
+                      title="Satuan Pakai"
                     >
                       {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
@@ -350,6 +354,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                           e.stopPropagation();
                           setRecipeToDelete(recipe);
                         }}
+                        title="Hapus Resep"
                         className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -400,6 +405,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                               setSelectedIngredientForStock(ing);
                               setIsStockIn(true);
                             }}
+                            title="Stok Masuk"
                             className="p-1.5 text-slate-300 hover:text-emerald-600 transition-colors"
                           >
                             <Plus className="w-4 h-4" />
@@ -417,6 +423,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                               setEditingIngredient({...ing});
                               setIsEditingIngredient(true);
                             }}
+                            title="Edit Bahan"
                             className="p-1.5 text-slate-300 hover:text-blue-600 transition-colors"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -437,6 +444,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                                 setIngredientToDelete({ ing });
                               }
                             }} 
+                            title="Hapus"
                             className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -580,6 +588,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                     className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/5 transition-all shadow-sm"
                     value={editingIngredient.category}
                     onChange={(e) => setEditingIngredient({...editingIngredient, category: e.target.value})}
+                    title="Edit Kategori"
                   >
                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
@@ -601,6 +610,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                     className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/5 transition-all shadow-sm"
                     value={editingIngredient.purchaseUnit}
                     onChange={(e) => setEditingIngredient({...editingIngredient, purchaseUnit: e.target.value as Unit})}
+                    title="Edit Satuan Beli"
                   >
                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
@@ -611,6 +621,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
                     className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/5 transition-all shadow-sm"
                     value={editingIngredient.useUnit}
                     onChange={(e) => setEditingIngredient({...editingIngredient, useUnit: e.target.value as Unit})}
+                    title="Edit Satuan Pakai"
                   >
                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
