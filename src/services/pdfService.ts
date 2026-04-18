@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { Ingredient, Recipe, Transaction, Employee, ShiftType } from "../types";
 import { formatCurrency } from "../lib/utils";
 import { JOBDESK_MARKDOWN } from "../constants";
@@ -33,77 +33,6 @@ const hideLoadingOverlay = (overlay: HTMLElement | null) => {
   if (overlay && document.body.contains(overlay)) {
     document.body.removeChild(overlay);
   }
-};
-
-const applyOklchFix = (clonedDoc: Document) => {
-  const clonedWindow = clonedDoc.defaultView;
-  if (clonedWindow) {
-    const originalGetComputedStyle = clonedWindow.getComputedStyle;
-    clonedWindow.getComputedStyle = function(el, pseudoElt) {
-      const style = originalGetComputedStyle.call(clonedWindow, el, pseudoElt);
-      
-      return new Proxy(style, {
-        get(target, prop) {
-          if (prop === 'getPropertyValue') {
-            return function(property: string) {
-              const val = target.getPropertyValue(property);
-              if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('color(') || val.includes('var('))) {
-                if (property.includes('background')) return 'rgb(255, 255, 255)';
-                if (property.includes('color') || property.includes('border') || property.includes('outline')) return 'rgb(15, 23, 42)';
-                return 'none';
-              }
-              return val;
-            };
-          }
-          
-          const val = target[prop as keyof CSSStyleDeclaration];
-          if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('color(') || val.includes('var('))) {
-            const propStr = prop.toString().toLowerCase();
-            if (propStr.includes('bg') || propStr.includes('background')) return 'rgb(255, 255, 255)';
-            if (propStr.includes('color') || propStr.includes('border') || propStr.includes('outline')) return 'rgb(15, 23, 42)';
-            return 'none';
-          }
-          
-          if (typeof val === 'function') {
-            return val.bind(target);
-          }
-          
-          return val;
-        }
-      });
-    };
-  }
-
-  // Workaround Khusus untuk Efek Radial/Visual Kompleks
-  const elements = clonedDoc.querySelectorAll('*');
-  elements.forEach((el) => {
-    if (el instanceof HTMLElement) {
-      try {
-         el.style.filter = 'none'; // Hapus filter yang berpotensi memicu fail-point
-         
-         if (el.classList.contains('sphere-blue')) {
-           el.style.background = '#3b82f6';
-           el.style.backgroundColor = '#3b82f6';
-           el.style.boxShadow = 'none';
-           el.style.border = 'none';
-         } else if (el.classList.contains('sphere-green')) {
-           el.style.background = '#10b981';
-           el.style.backgroundColor = '#10b981';
-           el.style.boxShadow = 'none';
-           el.style.border = 'none';
-         } else if (el.classList.contains('sphere-red')) {
-           el.style.background = '#ef4444';
-           el.style.backgroundColor = '#ef4444';
-           el.style.boxShadow = 'none';
-           el.style.border = 'none';
-         }
-         
-         if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
-           el.style.display = 'none';
-         }
-      } catch (e) {}
-    }
-  });
 };
 
 const saveBlob = (doc: jsPDF, _filename: string) => {
@@ -452,22 +381,22 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   if (!reportRef.current) return;
   const overlay = showLoadingOverlay();
   try {
-    const canvas = await html2canvas(reportRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      onclone: applyOklchFix
+    const parentWidth = reportRef.current.offsetWidth;
+    const parentHeight = reportRef.current.offsetHeight;
+
+    const imgData = await toPng(reportRef.current, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
     });
     
-    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: [57, (canvas.height * 57) / canvas.width],
+      format: [57, (parentHeight * 57) / parentWidth],
       compress: true
     });
     
-    pdf.addImage(imgData, "PNG", 0, 0, 57, (canvas.height * 57) / canvas.width);
+    pdf.addImage(imgData, "PNG", 0, 0, 57, (parentHeight * 57) / parentWidth);
     saveBlob(pdf, `closing-report-${new Date().toLocaleDateString()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
@@ -481,14 +410,14 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
   if (!gridRef.current) return;
   const overlay = showLoadingOverlay();
   try {
-    const canvas = await html2canvas(gridRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      onclone: applyOklchFix
+    const parentWidth = gridRef.current.offsetWidth;
+    const parentHeight = gridRef.current.offsetHeight;
+
+    const imgData = await toPng(gridRef.current, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
     });
     
-    const imgData = canvas.toDataURL("image/png");
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -509,10 +438,10 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
     const maxImgWidth = pageWidth - (margin * 2);
     const maxImgHeight = pageHeight - 45;
     let imgWidth = maxImgWidth;
-    let imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let imgHeight = (parentHeight * imgWidth) / parentWidth;
     if (imgHeight > maxImgHeight) {
       imgHeight = maxImgHeight;
-      imgWidth = (canvas.width * imgHeight) / canvas.height;
+      imgWidth = (parentWidth * imgHeight) / parentHeight;
     }
     const xPos = (pageWidth - imgWidth) / 2;
     doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
@@ -540,14 +469,14 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
   if (!patternRef.current) return;
   const overlay = showLoadingOverlay();
   try {
-    const canvas = await html2canvas(patternRef.current, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      onclone: applyOklchFix
+    const parentWidth = patternRef.current.offsetWidth;
+    const parentHeight = patternRef.current.offsetHeight;
+
+    const imgData = await toPng(patternRef.current, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
     });
     
-    const imgData = canvas.toDataURL("image/png");
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -565,10 +494,10 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
     const maxImgWidth = pageWidth - (margin * 2);
     const maxImgHeight = pageHeight - 45; 
     let imgWidth = maxImgWidth;
-    let imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let imgHeight = (parentHeight * imgWidth) / parentWidth;
     if (imgHeight > maxImgHeight) {
       imgHeight = maxImgHeight;
-      imgWidth = (canvas.width * imgHeight) / canvas.height;
+      imgWidth = (parentWidth * imgHeight) / parentHeight;
     }
     const xPos = (pageWidth - imgWidth) / 2;
     doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
@@ -714,15 +643,16 @@ export const savePDF = async ({ headerSelector = '#header', tableData, tableHead
 
     const headerEl = document.querySelector(headerSelector) as HTMLElement;
     if (headerEl) {
-      const canvas = await html2canvas(headerEl, {
-        scale: 1,
-        useCORS: true,
-        onclone: applyOklchFix
+      const parentWidth = headerEl.offsetWidth;
+      const parentHeight = headerEl.offsetHeight;
+
+      const imgData = await toPng(headerEl, {
+        pixelRatio: 1,
+        backgroundColor: 'transparent',
       });
       
-      const imgData = canvas.toDataURL("image/png");
       const imgWidth = pageWidth - 20; 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgHeight = (parentHeight * imgWidth) / parentWidth;
       
       doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
       startY = 10 + imgHeight + 10;
