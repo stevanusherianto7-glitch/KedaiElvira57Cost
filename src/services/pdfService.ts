@@ -7,23 +7,7 @@ import { JOBDESK_MARKDOWN } from "../constants";
 import { SHIFT_CONFIGS } from "../schedulerConstants";
 
 const saveBlob = (doc: jsPDF, filename: string) => {
-  const blob = doc.output('blob');
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  
-  // High-reliability download approach
-  link.style.display = 'none';
-  link.href = url;
-  link.setAttribute('download', filename);
-  
-  document.body.appendChild(link);
-  link.click();
-  
-  // Cleanup with delay to ensure browser triggers download
-  setTimeout(() => {
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  }, 100);
+  doc.save(filename);
 };
 
 export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: string) => {
@@ -348,7 +332,18 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   const canvas = await html2canvas(reportRef.current, {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff"
+    allowTaint: true,
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const elements = clonedDoc.getElementsByTagName("*");
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i] as HTMLElement;
+        const style = window.getComputedStyle(el);
+        el.style.color = style.color;
+        el.style.backgroundColor = style.backgroundColor;
+        el.style.borderColor = style.borderColor;
+      }
+    }
   });
   
   const imgData = canvas.toDataURL("image/png");
@@ -368,7 +363,18 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
   const canvas = await html2canvas(gridRef.current, {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff"
+    allowTaint: true,
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const elements = clonedDoc.getElementsByTagName("*");
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i] as HTMLElement;
+        const style = window.getComputedStyle(el);
+        el.style.color = style.color;
+        el.style.backgroundColor = style.backgroundColor;
+        el.style.borderColor = style.borderColor;
+      }
+    }
   });
   
   const imgData = canvas.toDataURL("image/png");
@@ -425,7 +431,18 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
   const canvas = await html2canvas(patternRef.current, {
     scale: 2,
     useCORS: true,
-    backgroundColor: "#ffffff"
+    allowTaint: true,
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const elements = clonedDoc.getElementsByTagName("*");
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i] as HTMLElement;
+        const style = window.getComputedStyle(el);
+        el.style.color = style.color;
+        el.style.backgroundColor = style.backgroundColor;
+        el.style.borderColor = style.borderColor;
+      }
+    }
   });
   
   const imgData = canvas.toDataURL("image/png");
