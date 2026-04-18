@@ -206,8 +206,10 @@
 
 /* 1px Horizontal Scrollbar for Scheduler */
 .mini-scrollbar-x {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
+  @supports (scrollbar-width: thin) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
+  }
 }
 
 .mini-scrollbar-x::-webkit-scrollbar {
