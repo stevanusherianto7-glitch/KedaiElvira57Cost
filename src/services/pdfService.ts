@@ -43,6 +43,27 @@ const applyOklchFix = (clonedDoc: Document) => {
       el.style.color = style.color;
       el.style.backgroundColor = style.backgroundColor;
       el.style.borderColor = style.borderColor;
+
+      // WORKAROUND UNTUK HTML2CANVAS: Radial Gradient CSS tidak ter-render dengan baik
+      // Paksa elemen "bola jadwal" (sphere) menjadi flat (solid background) saat mode cetak PDF
+      if (el.classList.contains('sphere-blue')) {
+        el.style.background = '#3b82f6';
+        el.style.backgroundColor = '#3b82f6';
+        el.style.boxShadow = 'none';
+      } else if (el.classList.contains('sphere-green')) {
+        el.style.background = '#10b981';
+        el.style.backgroundColor = '#10b981';
+        el.style.boxShadow = 'none';
+      } else if (el.classList.contains('sphere-red')) {
+        el.style.background = '#ef4444';
+        el.style.backgroundColor = '#ef4444';
+        el.style.boxShadow = 'none';
+      }
+      
+      // Sembunyikan elemen highlight radial-gradient agar tidak membuat error layer warna HTML2Canvas
+      if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
+        el.style.display = 'none';
+      }
     }
   });
 };
