@@ -1,6 +1,6 @@
 {
-  "name": "Elvera 57 POS & ERP",
-  "short_name": "Elvera 57",
+  "name": "PSResto POS & ERP",
+  "short_name": "PSResto",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#064e3b",
@@ -37,14 +37,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Elvera 57 Desktop"
+      "label": "PSResto Desktop"
     },
     {
       "src": "logo-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Elvera 57 Mobile"
+      "label": "PSResto Mobile"
     }
   ]
 }

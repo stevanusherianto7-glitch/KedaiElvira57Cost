@@ -28,7 +28,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 100, className = "" }) => {
     >
       <img 
         src="/logo-transparent.png" 
-        alt="Elvera 57" 
+        alt="PSResto" 
         className="w-full h-full object-contain"
       />
     </div>

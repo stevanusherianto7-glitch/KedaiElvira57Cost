@@ -45,7 +45,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           <Logo size={48} />
           <div className="flex flex-col">
             <h1 className="text-lg font-bold leading-none tracking-tight text-slate-900">
-              Elvera<span className="text-emerald-600">57</span>
+              PS<span className="text-emerald-600">Resto</span>
             </h1>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Cost Control</span>
           </div>
@@ -98,7 +98,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
               AD
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">Admin Kedai Elvira 57</p>
+              <p className="text-xs font-bold text-slate-900 truncate">Admin PSResto</p>
               <p className="text-[10px] text-slate-400 truncate">Owner Mode</p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
           <div className="flex items-center gap-2">
             <Logo size={40} />
             <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-none">
-              Elvera<span className="text-emerald-600">57</span>
+              PS<span className="text-emerald-600">Resto</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">

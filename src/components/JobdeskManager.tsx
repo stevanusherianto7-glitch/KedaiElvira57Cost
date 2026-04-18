@@ -164,7 +164,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
       <div className="space-y-12 py-12 px-8 -mx-8 -mt-10 min-h-screen bg-slate-100/50 animate-in fade-in duration-700">
         <div className="space-y-2 text-center">
           <h2 className="text-4xl font-black text-slate-900 tracking-tight">SDM Dashboard</h2>
-          <p className="text-slate-500 font-medium italic">Kelola relasi Penjualan, Resep, dan Stok melalui SDM Kedai Elvera 57</p>
+          <p className="text-slate-500 font-medium italic">Kelola relasi Penjualan, Resep, dan Stok melalui SDM PSResto</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -173,7 +173,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
               <Users className="w-8 h-8 text-blue-500 group-hover:text-white transition-colors" />
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">Data Karyawan</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">Profil lengkap, jabatan, dan manajemen tim Elvera 57.</p>
+            <p className="text-slate-400 text-sm leading-relaxed">Profil lengkap, jabatan, dan manajemen tim PSResto.</p>
             <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-2 transition-all" />
           </div>
 
@@ -217,7 +217,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             <DialogContent className="max-w-md mx-auto rounded-[2rem] border-none shadow-2xl">
               <DialogHeader className="px-4 pt-4">
                 <DialogTitle className="text-2xl font-black text-slate-900">REKRUTMEN BARU</DialogTitle>
-                <DialogDescription className="text-slate-400 font-medium">Lengkapi data primer anggota tim Elvera 57.</DialogDescription>
+                <DialogDescription className="text-slate-400 font-medium">Lengkapi data primer anggota tim PSResto.</DialogDescription>
               </DialogHeader>
               <div className="p-4 space-y-6">
                 <div className="space-y-2">
@@ -283,7 +283,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
           </h2>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-8 h-1 bg-indigo-500 rounded-full"></span>
-            <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">Kedai Elvera 57 · SDM</p>
+            <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">PSResto · SDM</p>
           </div>
         </div>
       </div>

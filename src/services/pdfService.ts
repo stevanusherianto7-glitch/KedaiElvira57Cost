@@ -102,7 +102,7 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.setFont('helvetica', 'normal');
-        doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
+        doc.text('PSResto', data.settings.margin.left, pageHeight - 10);
         const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
         doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
       }
@@ -172,7 +172,7 @@ export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Rec
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
         doc.setFont('helvetica', 'normal');
-        doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
+        doc.text('PSResto', data.settings.margin.left, pageHeight - 10);
         const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
         doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
       }
@@ -360,7 +360,7 @@ export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[])
       doc.setFontSize(11);
       doc.setTextColor(148, 163, 184);
       doc.setFont('helvetica', 'italic');
-      doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+      doc.text('PSResto', 14, pageHeight - 10);
       
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
@@ -426,7 +426,7 @@ export const handleExportShiftPDF = (
     doc.setFontSize(18);
     doc.setTextColor(30, 41, 59);
     doc.setFont('helvetica', 'bold');
-    doc.text("Jadwal Shift Karyawan Pawon Salam Resto", 14, 15);
+    doc.text("Jadwal Shift Karyawan PSResto", 14, 15);
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'normal');
@@ -480,7 +480,7 @@ export const handleExportShiftPDF = (
     doc.setFontSize(11);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'italic');
-    doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+    doc.text('PSResto', 14, pageHeight - 10);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     const pageNumber = "Halaman 1";
@@ -511,7 +511,7 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'normal');
-    doc.text("Pawon Salam Resto", 14, 22);
+    doc.text("PSResto", 14, 22);
     
     doc.setFont('helvetica', 'bold');
     doc.text(`Mulai Berlaku: ${startDateStr}`, 14, 28);
@@ -566,7 +566,7 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     doc.setFontSize(11);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'italic');
-    doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+    doc.text('PSResto', 14, pageHeight - 10);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     const pageNumber = "Halaman 1";
@@ -601,7 +601,7 @@ export const handleExportSlipPDF = (employee: Employee | null) => {
     
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
-    doc.text(`PAWON SALAM RESTO`, pageWidth / 2, 34, { align: 'center' });
+    doc.text(`PSRESTO`, pageWidth / 2, 34, { align: 'center' });
     doc.text(`Periode: ${periodString}`, pageWidth / 2, 40, { align: 'center' });
 
     // Employee Info Box
@@ -661,7 +661,7 @@ export const handleExportSlipPDF = (employee: Employee | null) => {
     doc.setFontSize(9);
     doc.setTextColor(30, 41, 59);
     doc.text('Disetujui Oleh,', 20, sigY);
-    doc.text('Manajemen Pawon Salam Resto', 20, sigY + 25);
+    doc.text('Manajemen PSResto', 20, sigY + 25);
     doc.line(20, sigY + 20, 70, sigY + 20);
 
     doc.text('Diterima Oleh,', pageWidth - 70, sigY);
@@ -673,7 +673,7 @@ export const handleExportSlipPDF = (employee: Employee | null) => {
     doc.setFontSize(11);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'italic');
-    doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+    doc.text('PSResto', 14, pageHeight - 10);
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
