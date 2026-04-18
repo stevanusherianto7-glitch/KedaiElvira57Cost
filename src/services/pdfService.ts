@@ -410,10 +410,26 @@ export const savePDF = async ({ headerSelector = '#header', tableData, tableHead
     const headerEl = document.querySelector(headerSelector) as HTMLElement;
     if (headerEl) {
       const canvas = await html2canvas(headerEl, {
-        scale: 2,
+        scale: 3, // High-fidelity
         useCORS: true,
-        backgroundColor: null,
-        onclone: (cloned) => rgbForceFix(cloned)
+        logging: false,
+        backgroundColor: '#ffffff',
+        onclone: (cloned) => {
+          const header = cloned.getElementById('header');
+          if (header) {
+            header.style.backgroundColor = '#ffffff';
+            // Hide "Install App", "Notifications", and any buttons in the PDF capture
+            const uiElements = header.querySelectorAll('button, .flex.items-center:last-child');
+            uiElements.forEach((el) => {
+              (el as HTMLElement).style.display = 'none';
+            });
+            // Ensure title/logo text is dark
+            const brandingText = header.querySelectorAll('h1, span, p');
+            brandingText.forEach((el) => {
+              (el as HTMLElement).style.color = '#0f172a';
+            });
+          }
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
