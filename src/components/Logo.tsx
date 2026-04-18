@@ -7,11 +7,22 @@ interface LogoProps {
 }
 
 export const Logo: React.FC<LogoProps> = ({ size = 100, className = "" }) => {
-  // v1.0.3 - Absolute Path Fix
+  // Mapping sizes to tailwind classes to avoid inline styles warning
+  const sizeMap: Record<number, string> = {
+    40: "w-10 h-10",
+    48: "w-12 h-12",
+    64: "w-16 h-16",
+    100: "w-[100px] h-[100px]"
+  };
+
+  const sizeClass = sizeMap[size] || "";
+  const dynamicStyle = !sizeMap[size] ? { '--logo-size': `${size}px` } as React.CSSProperties : {};
+  const containerClass = sizeMap[size] ? sizeClass : "w-[var(--logo-size)] h-[var(--logo-size)]";
+
   return (
     <div 
-      className={`relative flex items-center justify-center overflow-hidden rounded-full ${className}`} 
-      style={{ width: size, height: size }}
+      className={`relative flex items-center justify-center overflow-hidden rounded-full ${containerClass} ${className}`} 
+      style={dynamicStyle}
     >
       <img 
         src="/logo-transparent.png" 
