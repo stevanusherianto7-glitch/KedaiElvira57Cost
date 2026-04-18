@@ -329,13 +329,17 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     doc.setFont(FONT_FAMILY, 'bold');
     doc.text("POLA JADWAL SHIFT MINGGUAN", pageWidth / 2, 15, { align: 'center' });
 
-    // Subtitle: Berlaku Mulai Tanggal dd/mm/yy
+    // Subtitle: PAWON SALAM RESTO
+    doc.setFontSize(11);
+    doc.setFont(FONT_FAMILY, 'normal');
+    doc.text("Pawon Salam Resto", pageWidth / 2, 21, { align: 'center' });
+
+    // Berlaku Mulai Tanggal dd/mm/yy
     const dd = String(currentDate.getDate()).padStart(2, '0');
     const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
     const yy = String(currentDate.getFullYear()).slice(-2);
     doc.setFontSize(10);
-    doc.setFont(FONT_FAMILY, 'normal');
-    doc.text(`Berlaku Mulai Tanggal ${dd}/${mm}/${yy}`, pageWidth / 2, 21, { align: 'center' });
+    doc.text(`Berlaku Mulai Tanggal ${dd}/${mm}/${yy}`, pageWidth / 2, 27, { align: 'center' });
     
     // Shift color mapping: P=blue, M=green, O=red
     const shiftCellColors: Record<string, [number, number, number]> = {
@@ -346,7 +350,9 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
 
     const headRow = ['Nama Karyawan', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     const bodyRows = employees.map(emp => {
-      const row = [emp.name.toUpperCase()];
+      // Name + role (jabatan) underneath
+      const nameWithRole = emp.role ? `${emp.name.toUpperCase()}\n${emp.role}` : emp.name.toUpperCase();
+      const row = [nameWithRole];
       const empPattern = weeklyPattern[emp.id] || weeklyPattern['default'] || Array(7).fill(ShiftType.LIBUR);
       [1, 2, 3, 4, 5, 6, 0].forEach(idx => {
          row.push(SHIFT_CONFIGS[empPattern[idx] || ShiftType.LIBUR]?.code || 'O');
@@ -355,22 +361,29 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     });
 
     autoTable(doc, {
-      startY: 27,
+      startY: 33,
       head: [headRow],
       body: bodyRows,
       theme: 'grid',
-      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], halign: 'center', fontStyle: 'bold' },
+      styles: { lineColor: [180, 180, 180], lineWidth: 0.4 },
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], halign: 'center', fontStyle: 'bold', lineColor: [180, 180, 180], lineWidth: 0.4 },
       bodyStyles: { halign: 'center', fontSize: 9, fontStyle: 'bold', textColor: [0, 0, 0] },
-      columnStyles: { 0: { halign: 'left', cellWidth: 50 } },
+      columnStyles: { 0: { halign: 'left', cellWidth: 55, fontSize: 8 } },
       didDrawCell: (data) => {
         // Color shift cells (columns 1-7, body rows only)
         if (data.section === 'body' && data.column.index >= 1) {
           const cellText = data.cell.text[0]?.trim();
           const bgColor = shiftCellColors[cellText];
           if (bgColor) {
+            // Fill background with shift color, leaving border visible
+            const inset = 0.2;
             doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-            // Redraw text in black on top of filled cell
+            doc.rect(data.cell.x + inset, data.cell.y + inset, data.cell.width - inset * 2, data.cell.height - inset * 2, 'F');
+            // Redraw gray border on top
+            doc.setDrawColor(180, 180, 180);
+            doc.setLineWidth(0.4);
+            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'S');
+            // Redraw text in black
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(9);
             doc.setFont(FONT_FAMILY, 'bold');
