@@ -157,7 +157,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
 
   if (isMenuOpen) {
     return (
-      <div className="space-y-12 py-8 animate-in fade-in duration-700">
+      <div className="space-y-12 py-12 px-8 -mx-8 -mt-10 min-h-screen bg-slate-100/50 animate-in fade-in duration-700">
         <div className="space-y-2 text-center">
           <h2 className="text-4xl font-black text-slate-900 tracking-tight">SDM Dashboard</h2>
           <p className="text-slate-500 font-medium italic">Kelola relasi Penjualan, Resep, dan Stok melalui SDM Kedai Elvera 57</p>
