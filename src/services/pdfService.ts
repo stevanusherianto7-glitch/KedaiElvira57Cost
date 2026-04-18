@@ -47,19 +47,24 @@ const applyOklchFix = (clonedDoc: Document) => {
         const currentColor = style.color;
         const currentBorder = style.borderColor;
 
-        if (currentColor && (currentColor.includes('oklch') || currentColor.includes('var('))) {
+        const isUnsupportedColor = (cssVal: string | null) => {
+          if (!cssVal) return false;
+          return cssVal.includes('oklch') || cssVal.includes('oklab') || cssVal.includes('color(') || cssVal.includes('var(');
+        };
+
+        if (isUnsupportedColor(currentColor)) {
             el.style.color = '#0f172a'; // fallback
         } else if (currentColor) {
             el.style.color = currentColor;
         }
 
-        if (currentBg && (currentBg.includes('oklch') || currentBg.includes('var('))) {
+        if (isUnsupportedColor(currentBg)) {
             el.style.backgroundColor = '#ffffff'; 
         } else if (currentBg) {
             el.style.backgroundColor = currentBg;
         }
         
-        if (currentBorder && (currentBorder.includes('oklch') || currentBorder.includes('var('))) {
+        if (isUnsupportedColor(currentBorder)) {
             el.style.borderColor = '#e2e8f0';
         } else if (currentBorder) {
             el.style.borderColor = currentBorder;
