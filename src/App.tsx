@@ -84,7 +84,11 @@ function AppContent() {
     handleRestore,
     handleAddIngredient,
     handleAddExpense,
-    handleSaveEmployee
+    handleSaveEmployee,
+    shifts,
+    setShifts,
+    weeklyPattern,
+    setWeeklyPattern
   } = state;
 
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
@@ -218,6 +222,10 @@ function AppContent() {
             generateFilteredMarkdown={generateFilteredMarkdown}
             selectedEmployeeForSlip={selectedEmployeeForSlip}
             setSelectedEmployeeForSlip={setSelectedEmployeeForSlip}
+            shifts={shifts}
+            setShifts={setShifts}
+            weeklyPattern={weeklyPattern}
+            setWeeklyPattern={setWeeklyPattern}
           />
         )}
       </div>

@@ -71,3 +71,28 @@ CREATE POLICY "Users can manage their own recipes" ON recipes FOR ALL USING (aut
 CREATE POLICY "Users can manage their own recipe items" ON recipe_items FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage their own employees" ON employees FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage their own transactions" ON transactions FOR ALL USING (auth.uid() = user_id);
+
+-- 6. Shifts Table (Jadwal Shift)
+CREATE TABLE shifts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    shift_type TEXT NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+-- 7. Shift Patterns Table (Pola Shift)
+CREATE TABLE shift_patterns (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
+    pattern JSONB NOT NULL, -- Array of 7 ShiftTypes
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+ALTER TABLE shifts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shift_patterns ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own shifts" ON shifts FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage their own shift_patterns" ON shift_patterns FOR ALL USING (auth.uid() = user_id);

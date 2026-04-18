@@ -1,5 +1,11 @@
 export type Unit = 'kg' | 'gr' | 'liter' | 'ml' | 'pcs' | 'buah' | 'karung' | 'dus' | 'pack' | 'botol' | 'sachet' | 'ikat' | 'kaleng' | 'galon' | 'box' | 'papan' | 'bks';
 
+export enum ShiftType {
+  PAGI = 'PAGI',
+  MIDDLE = 'MIDDLE',
+  LIBUR = 'LIBUR'
+}
+
 export interface Ingredient {
   id: string;
   name: string;
@@ -54,6 +60,32 @@ export interface Employee {
   name: string;
   role: string;
   salary: number;
+  avatarColor?: string;
+  initials?: string;
+}
+
+export interface ShiftConfig {
+  type: ShiftType;
+  label: string;
+  code: string; // 'P', 'M', 'O'
+  timeRange: {
+    weekday: string;
+    weekend: string;
+  };
+  description?: string;
+  colorFrom: string;
+  colorTo: string;
+  textColor: string;
+  ringColor: string;
+}
+
+export type EmployeeSchedule = Record<string, ShiftType>;
+
+export interface EditModalState {
+  isOpen: boolean;
+  employeeId: string | null;
+  dateStr: string | null; // YYYY-MM-DD
+  currentType: ShiftType | null;
 }
 
 export interface TransactionItem {

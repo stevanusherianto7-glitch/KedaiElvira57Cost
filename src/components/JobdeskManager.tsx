@@ -12,16 +12,19 @@ import {
   Save,
   Package,
   UtensilsCrossed,
+  Receipt,
+  Download,
+  CalendarDays,
+  Layers,
   Users,
   CheckCircle2,
   Printer,
   Zap,
   Wallet,
   History,
-  Calculator,
-  Receipt
+  Calculator
 } from "lucide-react";
-import { Employee } from "../types";
+import { Employee, ShiftType, EditModalState } from "../types";
 import { formatCurrency, cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,11 +47,17 @@ import {
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JOBDESK_MARKDOWN } from "../constants";
+import { generateMonthDates, generateShiftsFromPattern } from "../schedulerConstants";
+import SchedulerHeader from "./scheduler/SchedulerHeader";
+import ScheduleGrid from "./scheduler/ScheduleGrid";
+import EditShiftModal from "./scheduler/EditShiftModal";
+import PatternManager from "./scheduler/PatternManager";
+import * as pdfService from "../services/pdfService";
 
 interface JobdeskManagerProps {
   employees: Employee[];
-  karyawanTab: 'data' | 'jobdesk' | 'slip';
-  setKaryawanTab: (val: 'data' | 'jobdesk' | 'slip') => void;
+  karyawanTab: 'data' | 'jobdesk' | 'slip' | 'jadwal';
+  setKaryawanTab: (val: 'data' | 'jobdesk' | 'slip' | 'jadwal') => void;
   isAddingEmployee: boolean;
   setIsAddingEmployee: (val: boolean) => void;
   newEmployee: Partial<Employee>;
@@ -63,6 +72,11 @@ interface JobdeskManagerProps {
   generateFilteredMarkdown: () => string;
   selectedEmployeeForSlip: Employee | null;
   setSelectedEmployeeForSlip: (val: Employee | null) => void;
+  // Shift related props
+  shifts: Record<string, Record<string, ShiftType>>;
+  setShifts: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShiftType>>>>;
+  weeklyPattern: Record<string, ShiftType[]>;
+  setWeeklyPattern: React.Dispatch<React.SetStateAction<Record<string, ShiftType[]>>>;
 }
 
 export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
@@ -82,8 +96,65 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
   handleExportJobdeskPDF,
   generateFilteredMarkdown,
   selectedEmployeeForSlip,
-  setSelectedEmployeeForSlip
+  setSelectedEmployeeForSlip,
+  shifts,
+  setShifts,
+  weeklyPattern,
+  setWeeklyPattern
 }) => {
+  const [schedulerView, setSchedulerView] = React.useState<'grid' | 'pattern'>('grid');
+  const [currentDate, setCurrentDate] = React.useState(new Date()); // Using 2026 based on previous context if needed, but current date is safer
+  
+  const monthDates = React.useMemo(() => 
+    generateMonthDates(currentDate.getFullYear(), currentDate.getMonth()), 
+    [currentDate]
+  );
+
+  const [modalState, setModalState] = React.useState<EditModalState>({
+    isOpen: false,
+    employeeId: null,
+    dateStr: null,
+    currentType: null
+  });
+
+  const handleOpenModal = (employeeId: string, dateStr: string, currentType: ShiftType) => {
+    setModalState({ isOpen: true, employeeId, dateStr, currentType });
+  };
+
+  const handleSaveShift = (newType: ShiftType) => {
+    if (modalState.employeeId && modalState.dateStr) {
+      setShifts(prev => ({
+        ...prev,
+        [modalState.employeeId!]: {
+          ...(prev[modalState.employeeId!] || {}),
+          [modalState.dateStr!]: newType
+        }
+      }));
+    }
+  };
+
+  const handleApplyPattern = (patternToApply: Record<string, ShiftType[]>) => {
+    const newShiftsForMonth = generateShiftsFromPattern(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        employees,
+        patternToApply
+    );
+
+    setShifts(prevShifts => {
+        const updatedShifts = { ...prevShifts };
+        Object.keys(newShiftsForMonth).forEach(empId => {
+            updatedShifts[empId] = {
+                ...(updatedShifts[empId] || {}),
+                ...newShiftsForMonth[empId]
+            };
+        });
+        return updatedShifts;
+    });
+  };
+
+  const currentEmployee = employees.find(e => e.id === modalState.employeeId);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -126,6 +197,17 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             >
               <Receipt className="w-4 h-4" />
               Slip Gaji
+            </button>
+
+            <button 
+              onClick={() => setKaryawanTab('jadwal')}
+              className={cn(
+                "w-full px-6 py-3 rounded-xl text-sm font-bold transition-all text-left flex items-center gap-3",
+                karyawanTab === 'jadwal' ? "bg-slate-900 text-white shadow-lg" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              <CalendarDays className="w-4 h-4" />
+              Jadwal Shift
             </button>
             
             <Dialog open={isAddingEmployee} onOpenChange={setIsAddingEmployee}>
@@ -201,11 +283,21 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                       <Users className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors" />
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={(e) => { e.stopPropagation(); /* edit functionality */ }} className="p-1.5 text-slate-300 hover:text-emerald-600 transition-colors">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); /* edit functionality */ }} 
+                        className="p-1.5 text-slate-300 hover:text-emerald-600 transition-colors"
+                        title="Edit Karyawan"
+                      >
                         <Edit2 className="w-3.5 h-3.5" />
+                        <span className="sr-only">Edit Karyawan</span>
                       </button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteEmployee(emp.id); }} className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteEmployee(emp.id); }} 
+                        className="p-1.5 text-slate-300 hover:text-rose-500 transition-colors"
+                        title="Hapus Karyawan"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
+                        <span className="sr-only">Hapus Karyawan</span>
                       </button>
                     </div>
                   </div>
@@ -222,8 +314,10 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                         setKaryawanTab('slip');
                       }}
                       className="p-1 text-slate-300 hover:text-emerald-600 transition-colors"
+                      title="Lihat Slip Gaji"
                     >
                       <Receipt className="w-3.5 h-3.5" />
+                      <span className="sr-only">Lihat Slip Gaji</span>
                     </button>
                   </div>
                 </div>
@@ -377,6 +471,47 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                   <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Pilih Karyawan di samping Untuk Melihat Slip</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {karyawanTab === 'jadwal' && (
+            <div className="space-y-8 animate-in fade-in duration-500">
+               {schedulerView === 'grid' ? (
+                 <>
+                   <SchedulerHeader 
+                     currentDate={currentDate}
+                     onPreviousMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                     onNextMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                     onExportPDF={() => pdfService.handleExportShiftPDF(employees, shifts, monthDates, currentDate)}
+                     onExportPatternPDF={() => setSchedulerView('pattern')}
+                   />
+                   <ScheduleGrid 
+                     employees={employees}
+                     shifts={shifts}
+                     dates={monthDates}
+                     onShiftClick={handleOpenModal}
+                   />
+                   {modalState.isOpen && currentEmployee && modalState.dateStr && (
+                     <EditShiftModal 
+                       isOpen={modalState.isOpen}
+                       onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+                       employee={currentEmployee}
+                       dateStr={modalState.dateStr}
+                       initialType={modalState.currentType!}
+                       onSave={handleSaveShift}
+                     />
+                   )}
+                 </>
+               ) : (
+                 <PatternManager 
+                   employees={employees}
+                   initialPattern={weeklyPattern}
+                   onSavePattern={setWeeklyPattern}
+                   onApplyPattern={handleApplyPattern}
+                   onBack={() => setSchedulerView('grid')}
+                   currentDate={currentDate}
+                 />
+               )}
             </div>
           )}
         </div>

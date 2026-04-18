@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Ingredient, Recipe, Employee, Transaction, Expense, Unit, RecipeItem } from "../types";
+import { Ingredient, Recipe, Employee, Transaction, Expense, Unit, RecipeItem, ShiftType } from "../types";
 import { CATEGORIES } from "../constants";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -12,6 +12,18 @@ export function useAppState() {
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [pettyCash, setPettyCash] = React.useState<number>(0);
+  const [shifts, setShifts] = React.useState<Record<string, Record<string, ShiftType>>>(() => {
+    try {
+      const saved = localStorage.getItem("resto-shift-data");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) { return {}; }
+  });
+  const [weeklyPattern, setWeeklyPattern] = React.useState<Record<string, ShiftType[]>>(() => {
+    try {
+      const saved = localStorage.getItem("resto-shift-pattern");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) { return {}; }
+  });
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
@@ -66,11 +78,31 @@ export function useAppState() {
               const { data: empData } = await supabase.from('employees').select('*');
               const { data: transData } = await supabase.from('transactions').select('*');
               
+              // Fetch shifts and patterns
+              const { data: shiftData } = await supabase.from('shifts').select('*');
+              const { data: patternData } = await supabase.from('shift_patterns').select('*');
+
               if (mounted) {
                 if (ingData) setIngredients(ingData);
                 if (recData) setRecipes(recData);
                 if (empData) setEmployees(empData);
                 if (transData) setTransactions(transData);
+                
+                if (shiftData) {
+                  const formattedShifts: Record<string, Record<string, ShiftType>> = {};
+                  shiftData.forEach(s => {
+                    if (!formattedShifts[s.employee_id]) formattedShifts[s.employee_id] = {};
+                    formattedShifts[s.employee_id][s.date] = s.shift_type as ShiftType;
+                  });
+                  setShifts(formattedShifts);
+                }
+                if (patternData) {
+                  const formattedPatterns: Record<string, ShiftType[]> = {};
+                  patternData.forEach(p => {
+                    formattedPatterns[p.employee_id] = p.pattern as ShiftType[];
+                  });
+                  setWeeklyPattern(formattedPatterns);
+                }
               }
             } catch (err) {
               console.error("Supabase fetch exception:", err);
@@ -192,6 +224,57 @@ export function useAppState() {
     if (!isLoaded) return;
     localStorage.setItem("resto_petty_cash", pettyCash.toString());
   }, [pettyCash, isLoaded]);
+
+  // Sync Shifts to Supabase
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("resto-shift-data", JSON.stringify(shifts));
+
+    const syncShifts = async () => {
+      if (user && Object.keys(shifts).length > 0) {
+        setIsSyncing(true);
+        const shiftList: any[] = [];
+        Object.entries(shifts).forEach(([employee_id, days]) => {
+          Object.entries(days).forEach(([date, shift_type]) => {
+            shiftList.push({
+              employee_id,
+              date,
+              shift_type,
+              user_id: user.id
+            });
+          });
+        });
+        
+        // Supabase upsert requires unique constraint. In this case, employee_id + date.
+        // Assuming the table unique constraint is (employee_id, date)
+        if (shiftList.length > 0) {
+          await supabase.from('shifts').upsert(shiftList, { onConflict: 'employee_id,date' });
+        }
+        setIsSyncing(false);
+      }
+    };
+    syncShifts();
+  }, [shifts, isLoaded, user]);
+
+  // Sync Patterns to Supabase
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("resto-shift-pattern", JSON.stringify(weeklyPattern));
+
+    const syncPatterns = async () => {
+      if (user && Object.keys(weeklyPattern).length > 0) {
+        setIsSyncing(true);
+        const patternList = Object.entries(weeklyPattern).map(([employee_id, pattern]) => ({
+          employee_id,
+          pattern,
+          user_id: user.id
+        }));
+        await supabase.from('shift_patterns').upsert(patternList, { onConflict: 'employee_id' });
+        setIsSyncing(false);
+      }
+    };
+    syncPatterns();
+  }, [weeklyPattern, isLoaded, user]);
 
   const deleteIngredient = (id: string) => {
     setIngredients(ingredients.filter(ing => ing.id !== id));
@@ -360,6 +443,10 @@ export function useAppState() {
     handleRestore,
     handleAddIngredient,
     handleAddExpense,
-    handleSaveEmployee
+    handleSaveEmployee,
+    shifts,
+    setShifts,
+    weeklyPattern,
+    setWeeklyPattern
   };
 }

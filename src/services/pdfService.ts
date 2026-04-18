@@ -1,9 +1,10 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
-import { Ingredient, Recipe, Transaction } from "../types";
+import { Ingredient, Recipe, Transaction, Employee, ShiftType } from "../types";
 import { formatCurrency } from "../lib/utils";
 import { JOBDESK_MARKDOWN } from "../constants";
+import { SHIFT_CONFIGS } from "../schedulerConstants";
 
 export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: string) => {
   const doc = new jsPDF('p', 'mm', 'a4');
@@ -331,4 +332,97 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   
   pdf.addImage(imgData, "PNG", 0, 0, 57, (canvas.height * 57) / canvas.width);
   pdf.save(`closing-report-${new Date().toLocaleDateString()}.pdf`);
+};
+
+export const handleExportShiftPDF = (employees: Employee[], shifts: Record<string, Record<string, ShiftType>>, monthDates: { dateStr: string; dayName: string; dayNum: string }[], currentDate: Date) => {
+  const doc = new jsPDF('l', 'mm', 'a4');
+  const periodString = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  doc.setFontSize(18);
+  doc.setTextColor(30, 41, 59);
+  doc.text("Jadwal Shift Karyawan Kedai Elvera 57", 14, 15);
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Periode: ${periodString}`, 14, 22);
+
+  const tableHead = [
+    [
+      { content: 'Nama', styles: { halign: 'left', fontStyle: 'bold', valign: 'middle' } },
+      { content: 'Role', styles: { halign: 'left', fontStyle: 'bold', valign: 'middle' } },
+      ...monthDates.map(d => {
+        const isWeekend = d.dayName === 'MIN' || d.dayName === 'SAB';
+        const fillColor: [number, number, number] = isWeekend ? [254, 202, 202] : [241, 245, 249];
+        const textColor: [number, number, number] = isWeekend ? [127, 29, 29] : [51, 65, 85];
+        return {
+          content: `${d.dayName}\n${d.dayNum}`,
+          styles: { 
+            halign: 'center', valign: 'middle', fontSize: 6, fontStyle: 'bold',
+            fillColor,
+            textColor,
+          } 
+        };
+      })
+    ]
+  ];
+  
+  const tableBody = employees.map(emp => {
+    return [
+      { content: emp.name, styles: { fontStyle: 'bold' } },
+      { content: emp.role, styles: { fontSize: 7 } },
+      ...monthDates.map(date => {
+        const shift = shifts[emp.id]?.[date.dateStr] || ShiftType.LIBUR;
+        const config = SHIFT_CONFIGS[shift];
+        let fillColor: [number, number, number] = [255, 255, 255];
+        if (shift === ShiftType.PAGI) fillColor = [59, 130, 246];
+        if (shift === ShiftType.MIDDLE) fillColor = [34, 197, 94];
+        if (shift === ShiftType.LIBUR) fillColor = [239, 68, 68];
+        return {
+          content: config.code,
+          styles: { halign: 'center', fillColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 6 }
+        };
+      })
+    ];
+  });
+
+  autoTable(doc, {
+    head: tableHead as any, body: tableBody as any, startY: 35, theme: 'grid',
+    styles: { fontSize: 8, cellPadding: 1.2, valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1 },
+    headStyles: { fillColor: [255, 255, 255], textColor: [30, 41, 59], lineColor: [203, 213, 225], lineWidth: 0.2, minCellHeight: 10 },
+    columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 15 } }
+  });
+  
+  doc.save(`Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
+};
+
+export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>) => {
+  const doc = new jsPDF('l', 'mm', 'a4');
+  doc.setFontSize(18);
+  doc.setTextColor(30, 41, 59);
+  doc.text("Pola Jadwal Mingguan Standar", 14, 15);
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text("Kedai Elvera 57", 14, 22);
+
+  const daysOfWeek = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+  const tableHead = [[
+    'Nama', 'Role', 'MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'
+  ]];
+
+  const tableBody = employees.map(emp => {
+    const pattern = weeklyPattern[emp.id] || Array(7).fill(ShiftType.LIBUR);
+    return [
+      emp.name, 
+      emp.role, 
+      ...pattern.map(p => SHIFT_CONFIGS[p].code)
+    ];
+  });
+
+  autoTable(doc, {
+    head: tableHead,
+    body: tableBody,
+    startY: 35,
+    theme: 'grid',
+    styles: { fontSize: 9, cellPadding: 3 }
+  });
+
+  doc.save(`Pola_Jadwal_Mingguan.pdf`);
 };
