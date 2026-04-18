@@ -51,12 +51,23 @@ const rgbForceFix = (clonedDoc: Document) => {
 };
 
 // ─── Printer Browser Method ────────────────────────────────────────────────
-const saveBlob = (doc: jsPDF, _filename: string) => {
+const saveBlob = (doc: jsPDF, filename: string) => {
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
-  // Cleanup after a delay to allow the browser to handle the open
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+  const win = window.open(url, '_blank');
+  
+  if (!win || win.closed || typeof win.closed === 'undefined') {
+    // Fallback: If pop-up is blocked, trigger a direct download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  
+  // Keep the URL alive for 1 minute to ensure the browser can load it
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
 
 // ─── Standardized Footer ───────────────────────────────────────────────────
