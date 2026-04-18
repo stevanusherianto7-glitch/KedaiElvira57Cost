@@ -1,11 +1,14 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { toPng } from "html-to-image";
+import html2canvas from "html2canvas";
 import { Ingredient, Recipe, Transaction, Employee, ShiftType } from "../types";
 import { formatCurrency } from "../lib/utils";
 import { JOBDESK_MARKDOWN } from "../constants";
 import { SHIFT_CONFIGS } from "../schedulerConstants";
 
+const FONT_FAMILY = 'helvetica';
+
+// ─── UI Loading Feedback ───────────────────────────────────────────────────
 const showLoadingOverlay = () => {
   const overlayId = 'pdf-loading-overlay';
   let overlay = document.getElementById(overlayId);
@@ -14,14 +17,14 @@ const showLoadingOverlay = () => {
     overlay.id = overlayId;
     Object.assign(overlay.style, {
       position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.7)', color: 'white', display: 'flex',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)', color: 'white', display: 'flex',
       flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      zIndex: '9999', fontFamily: 'sans-serif'
+      zIndex: '10000', fontFamily: 'sans-serif'
     });
     overlay.innerHTML = `
-      <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; padding: 0px; margin-bottom: 20px; animation: spin-pdf 1s linear infinite;"></div>
+      <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin-pdf 1s linear infinite;"></div>
       <style>@keyframes spin-pdf { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-      <h2 style="font-size: 20px; font-weight: bold; margin: 0;">MENYUSUN LAPORAN...</h2>
+      <h2 style="font-size: 20px; font-weight: bold; margin-top: 20px;">MENYUSUN LAPORAN...</h2>
       <p style="font-size: 14px; margin-top: 8px; color: #cbd5e1;">Mohon tunggu sebentar</p>
     `;
     document.body.appendChild(overlay);
@@ -35,10 +38,46 @@ const hideLoadingOverlay = (overlay: HTMLElement | null) => {
   }
 };
 
+// ─── RGB Color Forcing Fix (Prevents oklch errors) ──────────────────────────
+const rgbForceFix = (clonedDoc: Document) => {
+  const elements = clonedDoc.querySelectorAll('*');
+  elements.forEach((el) => {
+    const HTMLElement = el as HTMLElement;
+    const style = window.getComputedStyle(el);
+    HTMLElement.style.color = style.color;
+    HTMLElement.style.backgroundColor = style.backgroundColor;
+    HTMLElement.style.borderColor = style.borderColor;
+  });
+};
+
+// ─── Printer Browser Method ────────────────────────────────────────────────
 const saveBlob = (doc: jsPDF, _filename: string) => {
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
+  // Cleanup after a delay to allow the browser to handle the open
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+};
+
+// ─── Standardized Footer ───────────────────────────────────────────────────
+const addSimpleFooter = (doc: jsPDF, data: any) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;
+  
+  doc.setFontSize(7);
+  doc.setFont(FONT_FAMILY, 'normal');
+  doc.setTextColor(148, 163, 184);
+  
+  const footerY = pageHeight - 10;
+  const timestamp = `Dicetak: ${new Date().toLocaleString('id-ID')}`;
+  const brand = 'PSResto - Cost Control System';
+  const pageLabel = `Halaman ${currentPage}`;
+  
+  doc.text(timestamp, data.settings.margin.left, footerY);
+  doc.text(brand, pageWidth / 2, footerY, { align: 'center' });
+  doc.text(pageLabel, pageWidth - data.settings.margin.right - doc.getTextWidth(pageLabel), footerY);
+  doc.line(data.settings.margin.left, footerY - 3, pageWidth - data.settings.margin.right, footerY - 3);
 };
 
 export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: string) => {
@@ -47,15 +86,14 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
     const doc = new jsPDF({ compress: true, orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth - 14, 12, { align: 'right' });
-
+    // Legacy support for manual text header until Hybrid Header migration is complete
     doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SPO KITCHEN-MINI BAR-Lt. 1-Lt.2-Lt.3', pageWidth / 2, 26, { align: 'center' });
+    doc.setTextColor(30, 41, 59);
+    doc.setFont(FONT_FAMILY, 'bold');
+    doc.text('SPO OPERASIONAL PSResto', pageWidth / 2, 20, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setFont(FONT_FAMILY, 'normal');
+    doc.text(reportTitle, pageWidth / 2, 26, { align: 'center' });
     
     // Data preparation
     const lines = JOBDESK_MARKDOWN.split('\n');
@@ -72,12 +110,7 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
       } else if (line.includes('* [ ]')) {
         const taskName = line.replace('* [ ]', '').trim();
         if (selectedTasks.length === 0 || selectedTasks.includes(taskName)) {
-          tableData.push([
-            currentSection,
-            currentSubSection,
-            taskName,
-            "[ ]"
-          ]);
+          tableData.push([currentSection, currentSubSection, taskName, "[ ]"]);
         }
       }
     });
@@ -88,30 +121,15 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
-      footStyles: { fillColor: [243, 244, 246] },
       styles: { fontSize: 8, cellPadding: 2, textColor: [30, 41, 59] },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 'auto' },
-        3: { cellWidth: 20, halign: 'center' }
-      },
-      didDrawPage: (data) => {
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.setFont('helvetica', 'normal');
-        doc.text('PSResto', data.settings.margin.left, pageHeight - 10);
-        const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
-        doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
-      }
+      columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 40 }, 3: { cellWidth: 20, halign: 'center' } },
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    saveBlob(doc, `${reportTitle}-${new Date().toLocaleDateString()}.pdf`);
+    saveBlob(doc, 'Jobdesk.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor laporan.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -123,18 +141,12 @@ export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Rec
     const doc = new jsPDF({ compress: true, orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth - 14, 12, { align: 'right' });
-
     doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LAPORAN KONTROL STOK & PENGGUNAAN BAHAN', pageWidth / 2, 26, { align: 'center' });
+    doc.setTextColor(30, 41, 59);
+    doc.setFont(FONT_FAMILY, 'bold');
+    doc.text('LAPORAN KONTROL STOK & PENGGUNAAN BAHAN', pageWidth / 2, 20, { align: 'center' });
     
     const tableData = ingredients.map(ing => {
-      // Find menus that use this ingredient
       const usedInMenus = recipes
         .filter(r => r.items.some(item => item.ingredientId === ing.id))
         .map(r => r.name)
@@ -151,37 +163,19 @@ export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Rec
     });
 
     autoTable(doc, {
-      startY: 35,
+      startY: 30,
       head: [['Nama Bahan', 'Kategori', 'Digunakan Pada Menu', 'Stok Saat Ini', 'Min. Stok', 'Status']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
-      footStyles: { fillColor: [243, 244, 246] },
       styles: { fontSize: 8, cellPadding: 2, textColor: [30, 41, 59] },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 45 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
-        5: { cellWidth: 25 }
-      },
-      didDrawPage: (data) => {
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.setFont('helvetica', 'normal');
-        doc.text('PSResto', data.settings.margin.left, pageHeight - 10);
-        const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
-        doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
-      }
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    saveBlob(doc, `Laporan_Kontrol_Stok_dan_Penggunaan_Bahan_${new Date().toLocaleDateString()}.pdf`);
+    saveBlob(doc, 'Inventori.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor laporan.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -193,185 +187,39 @@ export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[])
     const doc = new jsPDF({ compress: true, orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth - 14, 12, { align: 'right' });
-
     doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Detail Bill of Materials (BOM) & Kalkulasi HPP (COGS)', pageWidth / 2, 26, { align: 'center' });
+    doc.setTextColor(30, 41, 59);
+    doc.setFont(FONT_FAMILY, 'bold');
+    doc.text('BILL OF MATERIALS (BOM) & KALKULASI HPP', pageWidth / 2, 20, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`Resep : ${recipe.name}`, pageWidth / 2, 26, { align: 'center' });
     
-    doc.setFontSize(12);
-    doc.text(`Resep : ${recipe.name}`, pageWidth / 2, 34, { align: 'center' });
-    
-    // Calculations
-    const bahanBakuItems = recipe.items.filter(item => {
-      const ing = ingredients.find(i => i.id === item.ingredientId);
-      return ing?.category !== "Kemasan Take Away";
-    });
-    const kemasanItems = recipe.items.filter(item => {
-      const ing = ingredients.find(i => i.id === item.ingredientId);
-      return ing?.category === "Kemasan Take Away";
-    });
-
-    const bahanBakuCost = bahanBakuItems.reduce((acc, item) => {
+    const bahanBakuCost = recipe.items.reduce((acc, item) => {
       const ing = ingredients.find(i => i.id === item.ingredientId);
       return acc + (ing ? (ing.purchasePrice / ing.conversionValue) * item.quantityNeeded : 0);
     }, 0);
-
-    const kemasanCost = kemasanItems.reduce((acc, item) => {
-      const ing = ingredients.find(i => i.id === item.ingredientId);
-      return acc + (ing ? (ing.purchasePrice / ing.conversionValue) * item.quantityNeeded : 0);
-    }, 0);
-
-    const wasteBuffer = (bahanBakuCost + kemasanCost) * (recipe.shrinkagePercent / 100);
-    const totalHPP = bahanBakuCost + kemasanCost + wasteBuffer;
-    const totalOPEX = recipe.laborCost + recipe.overheadCost;
-    const totalCost = totalHPP + totalOPEX;
 
     const tableData = recipe.items.map((item, index) => {
       const ing = ingredients.find(i => i.id === item.ingredientId);
       const cost = ing ? (ing.purchasePrice / ing.conversionValue) * item.quantityNeeded : 0;
-      return [
-        index + 1,
-        ing?.name || 'Unknown',
-        `${item.quantityNeeded} ${ing?.useUnit || ''}`,
-        'Rp',
-        cost.toLocaleString('id-ID')
-      ];
+      return [index + 1, ing?.name || 'Unknown', `${item.quantityNeeded} ${ing?.useUnit || ''}`, `Rp ${cost.toLocaleString('id-ID')}`];
     });
 
     autoTable(doc, {
-      startY: 45,
-      head: [[
-        { content: 'No.' },
-        { content: 'Bahan Baku' }, 
-        { content: 'Jumlah' }, 
-        { content: 'Biaya', colSpan: 2, styles: { halign: 'center' } }
-      ]],
+      startY: 35,
+      head: [['No.', 'Bahan Baku', 'Jumlah', 'Biaya']],
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
-      footStyles: { fillColor: [243, 244, 246] },
-      styles: { fontSize: 9, cellPadding: 3, textColor: [30, 41, 59] },
-      columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 10, halign: 'left' },
-        4: { cellWidth: 30, halign: 'right' }
-      },
-      didParseCell: (data) => {
-        if (data.section === 'body') {
-          if (data.column.index === 3) {
-            data.cell.styles.lineWidth = { top: 0.1, bottom: 0.1, left: 0.1, right: 0 } as any;
-          }
-          if (data.column.index === 4) {
-            data.cell.styles.lineWidth = { top: 0.1, bottom: 0.1, left: 0, right: 0.1 } as any;
-          }
-        }
-      }
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: { 3: { halign: 'right' } },
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    // Cost Structure Summary
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RINGKASAN STRUKTUR BIAYA', 14, finalY);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    let y = finalY + 7;
-    const addRow = (label: string, value: number) => {
-      doc.text(label, 14, y);
-      doc.text('Rp', 160, y);
-      doc.text(value.toLocaleString('id-ID'), pageWidth - 14, y, { align: 'right' });
-      y += 6;
-    };
-
-    addRow('Biaya Bahan Baku:', bahanBakuCost);
-    addRow('Biaya Kemasan:', kemasanCost);
-    addRow('Waste/Shrinkage:', wasteBuffer);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 4;
-    addRow('TOTAL HPP (Bahan + Kemasan + Waste):', totalHPP);
-    addRow('Biaya Tenaga Kerja (Per Porsi):', recipe.laborCost);
-    addRow('Biaya Overhead (Per Porsi):', recipe.overheadCost);
-    
-    if (recipe.overheadBreakdown) {
-      let breakdownY = y;
-      
-      doc.setFillColor(243, 244, 246);
-      doc.rect(12, breakdownY - 4, pageWidth - 24, 18, 'F');
-      
-      doc.setFontSize(8);
-      doc.setTextColor(30, 41, 59);
-      doc.text(`*Detail Alokasi Bulanan (Target ${recipe.overheadBreakdown.targetPortions} porsi):`, 14, breakdownY);
-      breakdownY += 4;
-      
-      const addBreakdownCol = (label: string, value: number, startX: number, currentY: number) => {
-        doc.text(label, startX, currentY);
-        doc.text('Rp', startX + 22, currentY);
-        doc.text(value.toLocaleString('id-ID'), startX + 45, currentY, { align: 'right' });
-      };
-
-      addBreakdownCol('- Gaji:', recipe.overheadBreakdown.labor, 18, breakdownY);
-      addBreakdownCol('- Listrik:', recipe.overheadBreakdown.electricity, 74, breakdownY);
-      addBreakdownCol('- Gas:', recipe.overheadBreakdown.gas, 134, breakdownY);
-      breakdownY += 4;
-      
-      addBreakdownCol('- Air:', recipe.overheadBreakdown.water, 18, breakdownY);
-      addBreakdownCol('- Promosi:', recipe.overheadBreakdown.marketing, 74, breakdownY);
-      addBreakdownCol('- Internet:', recipe.overheadBreakdown.internet, 134, breakdownY);
-      breakdownY += 4;
-      
-      addBreakdownCol('- Sampah:', recipe.overheadBreakdown.trashFee || 0, 18, breakdownY);
-      doc.text(`- Waste: ${recipe.overheadBreakdown.wastePercent}%`, 74, breakdownY);
-      y = breakdownY + 6;
-    } else {
-      y += 4;
-    }
-    
-    doc.setTextColor(0, 0, 0);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 4;
-    addRow('TOTAL BIAYA PRODUKSI (HPP + Tenaga Kerja + Overhead):', totalCost);
-    
-    doc.setFont('helvetica', 'bold');
-    y += 6;
-    const actualSellingPrice = recipe.roundedSellingPrice || recipe.sellingPrice;
-    addRow('HARGA JUAL:', actualSellingPrice);
-    addRow('LABA KOTOR (Harga Jual - HPP):', actualSellingPrice - totalHPP);
-    addRow('LABA BERSIH (Harga Jual - Total Biaya Produksi):', actualSellingPrice - totalCost);
-    
-    const profitMargin = actualSellingPrice > 0 ? ((actualSellingPrice - totalCost) / actualSellingPrice) * 100 : 0;
-    doc.text('MARGIN KEUNTUNGAN (%):', 14, y);
-    doc.text(`${Math.round(profitMargin)}%`, pageWidth - 14, y, { align: 'right' });
-
-    // Add footers to all pages
-    const pageCount = (doc.internal as any).getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      const pageSize = doc.internal.pageSize;
-      const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-      
-      doc.setFontSize(11);
-      doc.setTextColor(148, 163, 184);
-      doc.setFont('helvetica', 'italic');
-      doc.text('PSResto', 14, pageHeight - 10);
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      const pageNumber = `Halaman ${i}`;
-      doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
-    }
-
-    saveBlob(doc, `Resep_${recipe.name}_${new Date().toLocaleDateString()}.pdf`);
+    saveBlob(doc, 'Resep.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor laporan.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -381,26 +229,30 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   if (!reportRef.current) return;
   const overlay = showLoadingOverlay();
   try {
-    const parentWidth = reportRef.current.offsetWidth;
-    const parentHeight = reportRef.current.offsetHeight;
-
-    const imgData = await toPng(reportRef.current, {
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
+    // Standardizing closing report as 80mm receipt format but searchable via canvas hybrid logic if possible
+    // For receipts, we often capture the whole element
+    const canvas = await html2canvas(reportRef.current, {
+      scale: 2,
+      useCORS: true,
+      onclone: (cloned) => rgbForceFix(cloned)
     });
     
-    const pdf = new jsPDF({
+    const parentWidth = reportRef.current.offsetWidth;
+    const parentHeight = reportRef.current.offsetHeight;
+    const pdfHeight = (parentHeight * 80) / parentWidth;
+
+    const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: [57, (parentHeight * 57) / parentWidth],
+      format: [80, pdfHeight],
       compress: true
     });
     
-    pdf.addImage(imgData, "PNG", 0, 0, 57, (parentHeight * 57) / parentWidth);
-    saveBlob(pdf, `closing-report-${new Date().toLocaleDateString()}.pdf`);
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 80, pdfHeight);
+    saveBlob(doc, 'Closing.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor closing.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -417,165 +269,79 @@ export const handleExportShiftPDF = (
   try {
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
     const periodString = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-    const startDateRaw = dates.length > 0 ? new Date(dates[0].dateStr) : currentDate;
-    const startDateStr = startDateRaw.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
-    // Header
-    doc.setFontSize(18);
+    doc.setFontSize(14);
     doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Jadwal Shift Karyawan PSResto", 14, 15);
-    doc.setFontSize(10);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Periode Bulan: ${periodString}`, 14, 22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Mulai Berlaku: ${startDateStr}`, 14, 28);
+    doc.setFont(FONT_FAMILY, 'bold');
+    doc.text(`JADWAL SHIFT KARYAWAN PSRESTO - ${periodString.toUpperCase()}`, pageWidth / 2, 15, { align: 'center' });
     
-    // Sub-header HRD Archive
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(100, 116, 139);
-    doc.text('* Dokumen Arsip Resmi HRD (Laporan 1 Bulan Penuh)', pageWidth - 14, 28, { align: 'right' });
-
-    // Build Data table
-    const headRow = ['Nama Karyawan', ...dates.map(d => `${d.dayNum}`)];
+    const headRow = ['Karyawan', ...dates.map(d => `${d.dayNum}`)];
     const bodyRows = employees.map(emp => {
       const row = [emp.name.toUpperCase()];
       dates.forEach(day => {
         const shiftType = shifts[emp.id]?.[day.dateStr] || ShiftType.LIBUR;
-        // Gunakan mapping code P, M, O dari config (fallback P,M,O jika tidak terdaftar)
-        const code = SHIFT_CONFIGS[shiftType]?.code || 'O';
-        row.push(code);
+        row.push(SHIFT_CONFIGS[shiftType]?.code || 'O');
       });
       return row;
     });
 
-    const dayNameRow = ['Hari', ...dates.map(d => d.dayName)];
-
     autoTable(doc, {
-      startY: 32,
-      head: [dayNameRow, headRow],
+      startY: 22,
+      head: [headRow],
       body: bodyRows,
       theme: 'grid',
-      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center', fontSize: 6, cellPadding: 1 },
-      bodyStyles: { halign: 'center', fontSize: 6, cellPadding: 1 },
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 30, fontStyle: 'bold' }
-      },
-      styles: { textColor: [30, 41, 59] },
-      didParseCell: function(data) {
-        if (data.section === 'body' && data.column.index > 0) {
-           const val = data.cell.raw;
-           data.cell.styles.fontStyle = 'bold'; // <-- Make shift code BOLD
-           if (val === 'P') data.cell.styles.textColor = [37, 99, 235]; // Blue
-           else if (val === 'M') data.cell.styles.textColor = [5, 150, 105]; // Green
-           else if (val === 'O') data.cell.styles.textColor = [220, 38, 38]; // Red
-        }
-      }
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontSize: 7 },
+      bodyStyles: { halign: 'center', fontSize: 6.5, fontStyle: 'bold' },
+      columnStyles: { 0: { halign: 'left', cellWidth: 35 } },
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    // Footer
-    doc.setFontSize(11);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'italic');
-    doc.text('PSResto', 14, pageHeight - 10);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const pageNumber = "Halaman 1";
-    doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
-    
-    saveBlob(doc, `Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
+    saveBlob(doc, 'Shift.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor shift.");
   } finally {
     hideLoadingOverlay(overlay);
   }
 };
 
 export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>, currentDate: Date = new Date()) => {
-  if (!employees.length) return;
   const overlay = showLoadingOverlay();
   try {
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const startDateStr = currentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
-    doc.setFontSize(18);
+    doc.setFontSize(14);
     doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Pola Jadwal Mingguan Standar", 14, 15);
-    doc.setFontSize(10);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'normal');
-    doc.text("PSResto", 14, 22);
+    doc.setFont(FONT_FAMILY, 'bold');
+    doc.text("POLA JADWAL MINGGUAN STANDAR", pageWidth / 2, 15, { align: 'center' });
     
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Mulai Berlaku: ${startDateStr}`, 14, 28);
-    
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(100, 116, 139);
-    doc.text('* Dokumen Arsip Resmi HRD (Pola Standar Siklus Mingguan)', pageWidth - 14, 28, { align: 'right' });
-
-    // Build Weekly Data Table
     const headRow = ['Nama Karyawan', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     const bodyRows = employees.map(emp => {
       const row = [emp.name.toUpperCase()];
       const empPattern = weeklyPattern[emp.id] || weeklyPattern['default'] || Array(7).fill(ShiftType.LIBUR);
-      
-      // Data structure index for days matching mapping logic in JS: 
-      // Array in Pattern => 0 = Sunday, 1 = Monday, etc. or generated sequence
-      // In JS new Date().getDay() returns 0 for Sunday
-      // The WeeklyPatternBuilder UI uses `['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN']`
-      // So indices usually are 1(Mon)-6(Sat), 0(Sun)
-      // We will loop through [1, 2, 3, 4, 5, 6, 0] to match Mon-Sun
-      const displayIndices = [1, 2, 3, 4, 5, 6, 0];
-      displayIndices.forEach(idx => {
-         const shiftType = empPattern[idx] || ShiftType.LIBUR;
-         const code = SHIFT_CONFIGS[shiftType]?.code || 'O';
-         row.push(code);
+      [1, 2, 3, 4, 5, 6, 0].forEach(idx => {
+         row.push(SHIFT_CONFIGS[empPattern[idx] || ShiftType.LIBUR]?.code || 'O');
       });
       return row;
     });
 
     autoTable(doc, {
-      startY: 32,
+      startY: 22,
       head: [headRow],
       body: bodyRows,
       theme: 'grid',
-      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
-      bodyStyles: { halign: 'center', fontSize: 9 },
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 50, fontStyle: 'bold' }
-      },
-      styles: { textColor: [30, 41, 59] },
-      didParseCell: function(data) {
-        if (data.section === 'body' && data.column.index > 0) {
-           const val = data.cell.raw;
-           data.cell.styles.fontStyle = 'bold'; // <-- Make shift code BOLD
-           if (val === 'P') data.cell.styles.textColor = [37, 99, 235];
-           else if (val === 'M') data.cell.styles.textColor = [5, 150, 105];
-           else if (val === 'O') data.cell.styles.textColor = [220, 38, 38];
-        }
-      }
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
+      bodyStyles: { halign: 'center', fontSize: 9, fontStyle: 'bold' },
+      columnStyles: { 0: { halign: 'left', cellWidth: 50 } },
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    doc.setFontSize(11);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'italic');
-    doc.text('PSResto', 14, pageHeight - 10);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const pageNumber = "Halaman 1";
-    doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
-
-    saveBlob(doc, `Pola_Jadwal_Mingguan.pdf`);
+    saveBlob(doc, 'PolaMingguan.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor pola mingguan.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -589,100 +355,28 @@ export const handleExportSlipPDF = (employee: Employee | null) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const periodString = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
 
-    // Header
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth - 14, 12, { align: 'right' });
-
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT_FAMILY, 'bold');
     doc.text('SLIP GAJI KARYAWAN', pageWidth / 2, 28, { align: 'center' });
-    
     doc.setFontSize(10);
-    doc.setTextColor(148, 163, 184);
-    doc.text(`PSRESTO`, pageWidth / 2, 34, { align: 'center' });
-    doc.text(`Periode: ${periodString}`, pageWidth / 2, 40, { align: 'center' });
-
-    // Employee Info Box
-    doc.setFillColor(248, 250, 252);
-    doc.roundedRect(14, 50, pageWidth - 28, 30, 3, 3, 'F');
-    
-    doc.setFontSize(9);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PENERIMA', 20, 58);
-    doc.text('ROLE / JABATAN', 20, 70);
-    doc.text('ID KARYAWAN', pageWidth / 2, 58);
-    doc.text('STATUS', pageWidth / 2, 70);
-
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59);
-    doc.text(employee.name.toUpperCase(), 20, 63);
-    doc.text(employee.role.toUpperCase(), 20, 75);
-    doc.text(`#ELV-${employee.id.split('-')[0].toUpperCase()}`, pageWidth / 2, 63);
-    doc.text('FULL TIME', pageWidth / 2, 75);
-
-    // Salary Table
-    const tableData = [
-      ['Gaji Pokok Dasar', formatCurrency(employee.salary)],
-      ['Tunjangan Operasional', formatCurrency(0)],
-      ['Bonus Prestasi / Insentif', formatCurrency(0)]
-    ];
+    doc.text(`Periode: ${periodString}`, pageWidth / 2, 34, { align: 'center' });
 
     autoTable(doc, {
-      startY: 90,
-      head: [['Deskripsi Komponen', 'Jumlah (IDR)']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
-      styles: { fontSize: 10, cellPadding: 5 },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
-      }
+      startY: 45,
+      head: [['Komponen Gaji', 'Nilai (IDR)']],
+      body: [['Gaji Pokok Dasar', formatCurrency(employee.salary)], ['Tunjangan', 'Rp 0'], ['Total', formatCurrency(employee.salary)]],
+      theme: 'grid',
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
+      styles: { fontSize: 10, cellPadding: 4 },
+      columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    // Total Section
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFillColor(79, 70, 229); // Indigo-600
-    doc.rect(14, finalY, pageWidth - 28, 20, 'F');
-    
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('NET TAKE HOME PAY (TOTAL PENERIMAAN)', 20, finalY + 12);
-    
-    doc.setFontSize(14);
-    doc.text(formatCurrency(employee.salary), pageWidth - 20, finalY + 13, { align: 'right' });
-
-    // Signature Area
-    const sigY = finalY + 40;
-    doc.setFontSize(9);
-    doc.setTextColor(30, 41, 59);
-    doc.text('Disetujui Oleh,', 20, sigY);
-    doc.text('Manajemen PSResto', 20, sigY + 25);
-    doc.line(20, sigY + 20, 70, sigY + 20);
-
-    doc.text('Diterima Oleh,', pageWidth - 70, sigY);
-    doc.text(employee.name.toUpperCase(), pageWidth - 70, sigY + 25);
-    doc.line(pageWidth - 70, sigY + 20, pageWidth - 20, sigY + 20);
-
-    // Footer Branding
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.setFontSize(11);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'italic');
-    doc.text('PSResto', 14, pageHeight - 10);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('Halaman 1', pageWidth - 14 - doc.getTextWidth('Halaman 1'), pageHeight - 10);
-
-    saveBlob(doc, `Slip_Gaji_${employee.name.replace(/\s/g, '_')}_${periodString.replace(/\s/g, '_')}.pdf`);
+    saveBlob(doc, 'SlipGaji.pdf');
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    alert("Gagal mengekspor slip gaji.");
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -704,22 +398,22 @@ export const savePDF = async ({ headerSelector = '#header', tableData, tableHead
 
     const headerEl = document.querySelector(headerSelector) as HTMLElement;
     if (headerEl) {
-      const parentWidth = headerEl.offsetWidth;
-      const parentHeight = headerEl.offsetHeight;
-
-      const imgData = await toPng(headerEl, {
-        pixelRatio: 1,
-        backgroundColor: 'transparent',
+      const canvas = await html2canvas(headerEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        onclone: (cloned) => rgbForceFix(cloned)
       });
       
+      const imgData = canvas.toDataURL('image/png');
       const imgWidth = pageWidth - 20; 
-      const imgHeight = (parentHeight * imgWidth) / parentWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
       startY = 10 + imgHeight + 10;
     } else {
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setFont(FONT_FAMILY, 'bold');
       doc.text(reportTitle, pageWidth / 2, startY, { align: 'center' });
       startY += 15;
     }
@@ -730,28 +424,14 @@ export const savePDF = async ({ headerSelector = '#header', tableData, tableHead
       body: tableData,
       theme: 'grid',
       headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
-      footStyles: { fillColor: [243, 244, 246] },
       styles: { fontSize: 9, cellPadding: 3, textColor: [30, 41, 59] },
-      didDrawPage: (data) => {
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-        
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.setFont('helvetica', 'normal');
-        
-        const timestamp = new Date().toLocaleString('id-ID');
-        const pageText = `Halaman ${doc.internal.pages.length - 1}`;
-        
-        doc.text(timestamp, data.settings.margin.left, pageHeight - 10);
-        doc.text(pageText, pageWidth - data.settings.margin.right - doc.getTextWidth(pageText), pageHeight - 10);
-      }
+      didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
-    saveBlob(doc, 'report.pdf');
+    saveBlob(doc, 'Laporan.pdf');
   } catch (err: any) {
     console.error("PDF Export Error:", err);
-    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${err instanceof Error ? err.stack || err.message : String(err)}`);
+    alert("Gagal mengekspor laporan.");
   } finally {
     hideLoadingOverlay(overlay);
   }

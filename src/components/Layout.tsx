@@ -108,7 +108,7 @@ export function Layout({ children, activeTab, onTabChange }: LayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100 safe-top shadow-sm z-10 shrink-0">
+        <header id="header" className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100 safe-top shadow-sm z-10 shrink-0">
           <div className="flex items-center gap-2">
             <Logo size={40} />
             <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-none">
