@@ -387,7 +387,24 @@ export const handleExportShiftPDF = (employees: Employee[], shifts: Record<strin
     head: tableHead as any, body: tableBody as any, startY: 35, theme: 'grid',
     styles: { fontSize: 8, cellPadding: 1.2, valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1 },
     headStyles: { fillColor: [255, 255, 255], textColor: [30, 41, 59], lineColor: [203, 213, 225], lineWidth: 0.2, minCellHeight: 10 },
-    columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 15 } }
+    columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 15 } },
+    didDrawPage: (data) => {
+      const pageSize = doc.internal.pageSize;
+      const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+      const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+      
+      // Footer Branding - Pawon Salam Resto (Italic, 11pt)
+      doc.setFontSize(11);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
+      
+      // Page Number
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
+      doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
+    }
   });
   
   doc.save(`Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
@@ -421,7 +438,24 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     body: tableBody,
     startY: 35,
     theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 3 }
+    styles: { fontSize: 9, cellPadding: 3 },
+    didDrawPage: (data) => {
+      const pageSize = doc.internal.pageSize;
+      const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+      const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+      
+      // Footer Branding - Pawon Salam Resto (Italic, 11pt)
+      doc.setFontSize(11);
+      doc.setTextColor(100, 116, 139);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
+      
+      // Page Number
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
+      doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
+    }
   });
 
   doc.save(`Pola_Jadwal_Mingguan.pdf`);
