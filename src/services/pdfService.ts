@@ -39,30 +39,59 @@ const applyOklchFix = (clonedDoc: Document) => {
   const elements = clonedDoc.querySelectorAll('*');
   elements.forEach((el) => {
     if (el instanceof HTMLElement) {
-      const style = window.getComputedStyle(el);
-      el.style.color = style.color;
-      el.style.backgroundColor = style.backgroundColor;
-      el.style.borderColor = style.borderColor;
+      try {
+        const style = clonedDoc.defaultView ? clonedDoc.defaultView.getComputedStyle(el) : window.getComputedStyle(el);
+        
+        // Save current styles to override safely
+        const currentBg = style.backgroundColor;
+        const currentColor = style.color;
+        const currentBorder = style.borderColor;
 
-      // WORKAROUND UNTUK HTML2CANVAS: Radial Gradient CSS tidak ter-render dengan baik
-      // Paksa elemen "bola jadwal" (sphere) menjadi flat (solid background) saat mode cetak PDF
-      if (el.classList.contains('sphere-blue')) {
-        el.style.background = '#3b82f6';
-        el.style.backgroundColor = '#3b82f6';
-        el.style.boxShadow = 'none';
-      } else if (el.classList.contains('sphere-green')) {
-        el.style.background = '#10b981';
-        el.style.backgroundColor = '#10b981';
-        el.style.boxShadow = 'none';
-      } else if (el.classList.contains('sphere-red')) {
-        el.style.background = '#ef4444';
-        el.style.backgroundColor = '#ef4444';
-        el.style.boxShadow = 'none';
-      }
-      
-      // Sembunyikan elemen highlight radial-gradient agar tidak membuat error layer warna HTML2Canvas
-      if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
-        el.style.display = 'none';
+        if (currentColor && (currentColor.includes('oklch') || currentColor.includes('var('))) {
+            el.style.color = '#0f172a'; // fallback
+        } else if (currentColor) {
+            el.style.color = currentColor;
+        }
+
+        if (currentBg && (currentBg.includes('oklch') || currentBg.includes('var('))) {
+            el.style.backgroundColor = '#ffffff'; 
+        } else if (currentBg) {
+            el.style.backgroundColor = currentBg;
+        }
+        
+        if (currentBorder && (currentBorder.includes('oklch') || currentBorder.includes('var('))) {
+            el.style.borderColor = '#e2e8f0';
+        } else if (currentBorder) {
+            el.style.borderColor = currentBorder;
+        }
+
+        // WORKAROUND UNTUK HTML2CANVAS CRASH:
+        // Hapus filter complex (seperti drop-shadow) yang membuat parsing html2canvas gagal total
+        el.style.filter = 'none';
+        
+        // Hapus radial gradient dan box shadow kompleks pada bola shift
+        if (el.classList.contains('sphere-blue')) {
+          el.style.background = '#3b82f6';
+          el.style.backgroundColor = '#3b82f6';
+          el.style.boxShadow = 'none';
+          el.style.border = 'none';
+        } else if (el.classList.contains('sphere-green')) {
+          el.style.background = '#10b981';
+          el.style.backgroundColor = '#10b981';
+          el.style.boxShadow = 'none';
+          el.style.border = 'none';
+        } else if (el.classList.contains('sphere-red')) {
+          el.style.background = '#ef4444';
+          el.style.backgroundColor = '#ef4444';
+          el.style.boxShadow = 'none';
+          el.style.border = 'none';
+        }
+        
+        if (el.classList.contains('sphere-highlight') || el.classList.contains('sphere-shadow')) {
+          el.style.display = 'none';
+        }
+      } catch (e) {
+        // Silently catch styling errors so it doesn't crash the entire PDF branch
       }
     }
   });
