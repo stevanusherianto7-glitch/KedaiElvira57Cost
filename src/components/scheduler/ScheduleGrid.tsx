@@ -1,6 +1,7 @@
 import React from 'react';
 import { Employee, ShiftType } from '../../types';
 import GlossyButton from './GlossyButton';
+import { cn } from '@/lib/utils';
 
 interface ScheduleGridProps {
   employees: Employee[];
@@ -11,31 +12,62 @@ interface ScheduleGridProps {
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, onShiftClick }) => {
   return (
-    <div className="relative z-0">
-      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm min-h-[500px] flex flex-col overflow-hidden">
+    <div className="relative z-0 space-y-8">
+      {/* Shift Time Cheat Sheet */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top duration-1000">
+        <div className="bg-slate-50/50 border border-slate-100 p-6 rounded-[2rem] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-500 shadow-sm">
+              <span className="font-black text-xs">SEN-JUM</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senin - Jumat</p>
+              <p className="text-lg font-black text-slate-900 tracking-tighter">10.00 - 21.00</p>
+            </div>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+        </div>
         
-        {/* Scrollable Container for both X and Y axis */}
-        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar touch-pan-x touch-pan-y">
-          <div className="min-w-max relative">
+        <div className="bg-rose-50/30 border border-rose-100/50 p-6 rounded-[2rem] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-rose-500 shadow-sm">
+              <span className="font-black text-xs">SAB-MIN</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Sabtu - Minggu</p>
+              <p className="text-lg font-black text-rose-900 tracking-tighter">08.00 - 21.00</p>
+            </div>
+          </div>
+          <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+        </div>
+      </div>
+
+      <div className="bg-white min-h-[500px] flex flex-col rounded-[2.5rem] border border-slate-50 overflow-hidden shadow-sm">
+        
+        {/* Scrollable Container with 1px scrollbar utility */}
+        <div className="overflow-x-auto overflow-y-auto flex-1 mini-scrollbar-x touch-pan-x touch-pan-y">
+          <div className="min-w-max relative bg-white">
             
-            {/* Table Header - Now sticky */}
-            <div className="flex border-b border-slate-100 bg-white sticky top-0 z-40">
+            {/* Table Header - Sticky */}
+            <div className="flex bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
               {/* Sticky Name Header */}
-              <div className="sticky left-0 bg-white z-50 w-32 p-4 flex items-end border-r border-slate-100 shadow-[2px_0_10px_-2px_rgba(0,0,0,0.02)]">
-                <span className="text-slate-900 font-bold text-xs uppercase tracking-widest">Karyawan</span>
+              <div className="sticky left-0 bg-white z-50 w-32 p-4 flex items-end border-r border-slate-100">
+                <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">KARYAWAN</span>
               </div>
               
               {/* Date Headers */}
               {dates.map((day) => (
                 <div key={day.dateStr} className="flex flex-col items-center justify-center w-[72px] py-4 px-1 border-r border-slate-50 last:border-r-0">
-                  <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-widest mb-1",
                     day.dayName === 'MIN' || day.dayName === 'SAB' ? 'text-rose-500' : 'text-slate-400'
-                  }`}>
+                  )}>
                     {day.dayName}
                   </span>
-                  <span className={`text-base font-bold ${
-                     day.dayName === 'MIN' || day.dayName === 'SAB' ? 'text-rose-900' : 'text-slate-800'
-                  }`}>
+                  <span className={cn(
+                    "text-base font-black tracking-tighter",
+                    day.dayName === 'MIN' || day.dayName === 'SAB' ? 'text-rose-600' : 'text-slate-800'
+                  )}>
                     {day.dayNum}
                   </span>
                 </div>
@@ -43,14 +75,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, o
             </div>
 
             {/* Employee Rows */}
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50/50">
               {employees.map((emp) => (
-                <div key={emp.id} className="flex hover:bg-slate-50/50 transition-colors group">
+                <div key={emp.id} className="flex group hover:bg-slate-50/50 transition-colors">
                   
                   {/* Sticky Employee Name */}
-                  <div className="sticky left-0 bg-white group-hover:bg-slate-50/50 z-20 w-32 p-4 flex flex-col justify-center border-r border-slate-100 shadow-[2px_0_10px_-2px_rgba(0,0,0,0.02)] transition-colors">
-                    <span className="font-bold text-slate-900 text-sm truncate leading-tight">{emp.name}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{emp.role}</span>
+                  <div className="sticky left-0 bg-white group-hover:bg-slate-50/50 z-20 w-32 p-4 flex flex-col justify-center border-r border-slate-100 transition-colors shadow-[4px_0_12px_rgba(0,0,0,0.02)]">
+                    <span className="font-black text-slate-900 text-[11px] truncate leading-tight tracking-tight uppercase">{emp.name.toUpperCase()}</span>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest truncate mt-0.5">{emp.role.toUpperCase()}</span>
                   </div>
 
                   {/* Shift Cells */}
@@ -60,6 +92,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, o
                       <div key={`${emp.id}-${day.dateStr}`} className="w-[72px] flex items-center justify-center p-3 border-r border-slate-50/50 last:border-r-0">
                         <GlossyButton 
                           type={shiftType} 
+                          size="sm"
                           onClick={() => onShiftClick(emp.id, day.dateStr, shiftType)}
                         />
                       </div>
@@ -73,9 +106,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, o
         </div>
         
         {/* Summary Footer */}
-        <div className="border-t border-slate-100 bg-slate-50/30 p-4 text-center">
-            <span className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">
-                {employees.length} KARYAWAN | {dates.length} HARI PENJADWALAN
+        <div className="border-t border-slate-100 bg-white p-4 text-center">
+            <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">
+                {employees.length} TIM AKTIF · {dates.length} HARI PENJADWALAN
             </span>
         </div>
 

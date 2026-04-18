@@ -27,65 +27,59 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Controls Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center justify-between bg-white border border-slate-100 rounded-2xl shadow-sm p-2 flex-1 md:max-w-xs">
-          <button title="Bulan Sebelumnya" aria-label="Bulan Sebelumnya"
-            onClick={onPreviousMonth} 
-            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all active:scale-95"
-          >
-            <ChevronLeft size={20} className="stroke-[2.5px]" />
-            <span className="sr-only">Bulan Sebelumnya</span>
-          </button>
-          <span className="text-slate-900 font-bold text-lg tracking-tight capitalize">{monthYearString}</span>
-          <button title="Bulan Berikutnya" aria-label="Bulan Berikutnya"
-            onClick={onNextMonth} 
-            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all active:scale-95"
-          >
-            <ChevronRight size={20} className="stroke-[2.5px]" />
-            <span className="sr-only">Bulan Berikutnya</span>
-          </button>
-        </div>
-
-        <div className="flex gap-3">
-          <Button 
-            onClick={onExportPDF}
-            variant="outline"
-            className="h-12 px-6 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50 transition-all flex-1 md:flex-none"
-          >
-            <FileText size={18} className="mr-2" />
-            PDF Bulanan
-          </Button>
-          <Button 
-            onClick={onExportPatternPDF}
-            className="h-12 px-6 rounded-xl font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-200 transition-all flex-1 md:flex-none"
-          >
-            <CalendarDays size={18} className="mr-2" />
-            PDF Pola
-          </Button>
-        </div>
-      </div>
-
-      {/* Legend & Mode Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-6 bg-white border border-slate-100 rounded-2xl shadow-sm">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2.5">
-            <GlossyButton type={ShiftType.LIBUR} size="sm" />
-            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Off</span>
-          </div>
-          <div className="flex items-center gap-2.5">
+      {/* Legend & Month Control Row */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {/* Legend - Spheres */}
+        <div className="flex items-center gap-6 py-4 px-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm w-fit">
+          <div className="flex items-center gap-3">
             <GlossyButton type={ShiftType.PAGI} size="sm" />
-            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Pagi</span>
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Pagi</span>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <GlossyButton type={ShiftType.MIDDLE} size="sm" />
-            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Mid</span>
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Mid</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <GlossyButton type={ShiftType.LIBUR} size="sm" />
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Libur</span>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 py-1.5 px-3 rounded-full border border-slate-100/50">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Quick Edit Mode
+
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between bg-white border border-slate-100 rounded-full shadow-sm p-1.5 flex-1 max-w-sm mx-auto lg:mx-0">
+          <button 
+            onClick={onPreviousMonth} 
+            title="Bulan Sebelumnya"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 bg-slate-50 rounded-full transition-all active:scale-90"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <span className="text-slate-900 font-black text-sm uppercase tracking-widest">{monthYearString}</span>
+          <button 
+            onClick={onNextMonth} 
+            title="Bulan Berikutnya"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-900 bg-slate-50 rounded-full transition-all active:scale-90"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+           <button 
+             onClick={onExportPDF}
+             className="h-12 px-6 rounded-2xl font-bold bg-white border border-slate-100 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center justify-center shadow-sm active:scale-95"
+           >
+             <FileText size={18} className="mr-2" />
+             PDF
+           </button>
+           <button 
+             onClick={onExportPatternPDF}
+             className="h-12 px-6 rounded-2xl font-bold bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center shadow-xl shadow-slate-200 active:scale-95"
+           >
+             <CalendarDays size={18} className="mr-2" />
+             Pola
+           </button>
         </div>
       </div>
     </div>

@@ -87,7 +87,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
     const ingredient: Ingredient = {
       ...newIngredient as Ingredient,
       name: toTitleCase(newIngredient.name || ""),
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
     };
     setIngredients([...ingredients, ingredient]);
     setIsAddingIngredient(false);

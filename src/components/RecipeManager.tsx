@@ -74,7 +74,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
   const handleAddRecipe = () => {
     if (!newRecipeName) return;
     const recipe: Recipe = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       name: toTitleCase(newRecipeName),
       category: newRecipeCategory,
       sellingPrice: 0,
@@ -97,7 +97,7 @@ export const RecipeManager: React.FC<RecipeManagerProps> = ({
     if (!ingredient) return;
 
     const newItem: RecipeItem = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       ingredientId: selectedIngredientForRecipe,
       quantityNeeded: quantityForRecipe
     };

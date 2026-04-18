@@ -366,8 +366,8 @@ export const handleExportShiftPDF = (employees: Employee[], shifts: Record<strin
   
   const tableBody = employees.map(emp => {
     return [
-      { content: emp.name, styles: { fontStyle: 'bold' } },
-      { content: emp.role, styles: { fontSize: 7 } },
+      { content: emp.name.toUpperCase(), styles: { fontStyle: 'bold' } },
+      { content: emp.role.toUpperCase(), styles: { fontSize: 7 } },
       ...monthDates.map(date => {
         const shift = shifts[emp.id]?.[date.dateStr] || ShiftType.LIBUR;
         const config = SHIFT_CONFIGS[shift];
@@ -410,8 +410,8 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
   const tableBody = employees.map(emp => {
     const pattern = weeklyPattern[emp.id] || Array(7).fill(ShiftType.LIBUR);
     return [
-      emp.name, 
-      emp.role, 
+      emp.name.toUpperCase(), 
+      emp.role.toUpperCase(), 
       ...pattern.map(p => SHIFT_CONFIGS[p].code)
     ];
   });

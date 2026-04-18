@@ -351,7 +351,7 @@ export function useAppState() {
     const ingredient: Ingredient = {
       ...newIngredient as Ingredient,
       name: toTitleCase(newIngredient.name || ""),
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
     };
     
     setIngredients([...ingredients, ingredient]);
@@ -381,7 +381,7 @@ export function useAppState() {
     }
 
     const expense: Expense = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       date: new Date().toISOString(),
       description: newExpense.description,
       amount: newExpense.amount,
@@ -410,7 +410,7 @@ export function useAppState() {
     } else {
       const employee: Employee = {
         ...newEmployee as Employee,
-        id: Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
       };
       setEmployees([...employees, employee]);
     }

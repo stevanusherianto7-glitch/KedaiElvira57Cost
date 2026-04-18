@@ -103,7 +103,6 @@
   }
   .no-scrollbar {
     -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */
@@ -114,7 +113,6 @@
   /* Hide scrollbar for IE, Edge and Firefox */
   * {
     -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
   }
 }
 
@@ -146,4 +144,91 @@
   left: 0;
   top: 0.3em;
   margin: 0;
+}
+
+/* 3D Sphere Styles - God Mode UI */
+.sphere-base {
+  @apply relative rounded-full flex items-center justify-center overflow-hidden transition-all duration-200 active:scale-90 select-none cursor-pointer;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 4px 8px rgba(255, 255, 255, 0.4);
+}
+
+.sphere-blue {
+  background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);
+  border: 1px solid #60a5fa;
+}
+
+.sphere-green {
+  background: radial-gradient(circle at 30% 30%, #10b981, #047857);
+  border: 1px solid #34d399;
+}
+
+.sphere-red {
+  background: radial-gradient(circle at 30% 30%, #ef4444, #b91c1c);
+  border: 1px solid #f87171;
+}
+
+.sphere-shadow {
+  @apply absolute inset-0 rounded-full;
+  background: radial-gradient(circle at 70% 70%, transparent 50%, rgba(0,0,0,0.2) 100%);
+  pointer-events: none;
+}
+
+.sphere-highlight {
+  @apply absolute top-[10%] left-[15%] w-[40%] h-[20%] rounded-full opacity-60;
+  background: radial-gradient(ellipse at center, white 0%, transparent 80%);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+
+/* Custom Scrollbar for Scheduler */
+.scheduler-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  display: block;
+}
+
+.scheduler-scrollbar::-webkit-scrollbar-track {
+  @apply bg-slate-50;
+}
+
+.scheduler-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+}
+
+/* Glassmorphism for Bottom Nav */
+.glass-nav {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-[0_-8px_32px_rgba(0,0,0,0.05)];
+}
+
+/* 1px Horizontal Scrollbar for Scheduler */
+.mini-scrollbar-x {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
+}
+
+.mini-scrollbar-x::-webkit-scrollbar {
+  height: 1px;
+  display: block;
+}
+
+.mini-scrollbar-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mini-scrollbar-x::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+}
+
+/* SDM Dashboard Cards */
+.sdm-dashboard-card {
+  @apply relative overflow-hidden bg-white border border-slate-100 rounded-[2rem] p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 cursor-pointer group;
+}
+
+.sdm-dashboard-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity;
 }
