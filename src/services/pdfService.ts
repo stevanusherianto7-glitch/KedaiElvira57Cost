@@ -488,3 +488,103 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
 
   saveBlob(doc, `Pola_Jadwal_Mingguan.pdf`);
 };
+
+export const handleExportSlipPDF = (employee: Employee | null) => {
+  if (!employee) return;
+  
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const periodString = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+
+  // Header
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth - 14, 12, { align: 'right' });
+
+  doc.setFontSize(18);
+  doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SLIP GAJI KARYAWAN', pageWidth / 2, 28, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`PAWON SALAM RESTO`, pageWidth / 2, 34, { align: 'center' });
+  doc.text(`Periode: ${periodString}`, pageWidth / 2, 40, { align: 'center' });
+
+  // Employee Info Box
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(14, 50, pageWidth - 28, 30, 3, 3, 'F');
+  
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PENERIMA', 20, 58);
+  doc.text('ROLE / JABATAN', 20, 70);
+  doc.text('ID KARYAWAN', pageWidth / 2, 58);
+  doc.text('STATUS', pageWidth / 2, 70);
+
+  doc.setFontSize(11);
+  doc.setTextColor(30, 41, 59);
+  doc.text(employee.name.toUpperCase(), 20, 63);
+  doc.text(employee.role.toUpperCase(), 20, 75);
+  doc.text(`#ELV-${employee.id.split('-')[0].toUpperCase()}`, pageWidth / 2, 63);
+  doc.text('FULL TIME', pageWidth / 2, 75);
+
+  // Salary Table
+  const tableData = [
+    ['Gaji Pokok Dasar', formatCurrency(employee.salary)],
+    ['Tunjangan Operasional', formatCurrency(0)],
+    ['Bonus Prestasi / Insentif', formatCurrency(0)]
+  ];
+
+  autoTable(doc, {
+    startY: 90,
+    head: [['Deskripsi Komponen', 'Jumlah (IDR)']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' },
+    styles: { fontSize: 10, cellPadding: 5 },
+    columnStyles: {
+      0: { cellWidth: 'auto' },
+      1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+    }
+  });
+
+  // Total Section
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFillColor(79, 70, 229); // Indigo-600
+  doc.rect(14, finalY, pageWidth - 28, 20, 'F');
+  
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.text('NET TAKE HOME PAY (TOTAL PENERIMAAN)', 20, finalY + 12);
+  
+  doc.setFontSize(14);
+  doc.text(formatCurrency(employee.salary), pageWidth - 20, finalY + 13, { align: 'right' });
+
+  // Signature Area
+  const sigY = finalY + 40;
+  doc.setFontSize(9);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Disetujui Oleh,', 20, sigY);
+  doc.text('Manajemen Pawon Salam Resto', 20, sigY + 25);
+  doc.line(20, sigY + 20, 70, sigY + 20);
+
+  doc.text('Diterima Oleh,', pageWidth - 70, sigY);
+  doc.text(employee.name.toUpperCase(), pageWidth - 70, sigY + 25);
+  doc.line(pageWidth - 70, sigY + 20, pageWidth - 20, sigY + 20);
+
+  // Footer Branding
+  const pageHeight = doc.internal.pageSize.getHeight();
+  doc.setFontSize(11);
+  doc.setTextColor(148, 163, 184);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('Halaman 1', pageWidth - 14 - doc.getTextWidth('Halaman 1'), pageHeight - 10);
+
+  saveBlob(doc, `Slip_Gaji_${employee.name.replace(/\s/g, '_')}_${periodString.replace(/\s/g, '_')}.pdf`);
+};
