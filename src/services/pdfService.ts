@@ -419,6 +419,8 @@ export const handleExportShiftPDF = (
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const periodString = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    const startDateRaw = dates.length > 0 ? new Date(dates[0].dateStr) : currentDate;
+    const startDateStr = startDateRaw.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
     // Header
     doc.setFontSize(18);
@@ -428,7 +430,14 @@ export const handleExportShiftPDF = (
     doc.setFontSize(10);
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Periode: ${periodString}`, 14, 22);
+    doc.text(`Periode Bulan: ${periodString}`, 14, 22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Mulai Berlaku: ${startDateStr}`, 14, 28);
+    
+    // Sub-header HRD Archive
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 116, 139);
+    doc.text('* Dokumen Arsip Resmi HRD (Laporan 1 Bulan Penuh)', pageWidth - 14, 28, { align: 'right' });
 
     // Build Data table
     const headRow = ['Nama Karyawan', ...dates.map(d => `${d.dayNum}`)];
@@ -446,7 +455,7 @@ export const handleExportShiftPDF = (
     const dayNameRow = ['Hari', ...dates.map(d => d.dayName)];
 
     autoTable(doc, {
-      startY: 28,
+      startY: 32,
       head: [dayNameRow, headRow],
       body: bodyRows,
       theme: 'grid',
@@ -459,6 +468,7 @@ export const handleExportShiftPDF = (
       didParseCell: function(data) {
         if (data.section === 'body' && data.column.index > 0) {
            const val = data.cell.raw;
+           data.cell.styles.fontStyle = 'bold'; // <-- Make shift code BOLD
            if (val === 'P') data.cell.styles.textColor = [37, 99, 235]; // Blue
            else if (val === 'M') data.cell.styles.textColor = [5, 150, 105]; // Green
            else if (val === 'O') data.cell.styles.textColor = [220, 38, 38]; // Red
@@ -485,13 +495,14 @@ export const handleExportShiftPDF = (
   }
 };
 
-export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>) => {
+export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>, currentDate: Date = new Date()) => {
   if (!employees.length) return;
   const overlay = showLoadingOverlay();
   try {
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    const startDateStr = currentDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
     doc.setFontSize(18);
     doc.setTextColor(30, 41, 59);
@@ -501,6 +512,13 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     doc.setTextColor(148, 163, 184);
     doc.setFont('helvetica', 'normal');
     doc.text("Pawon Salam Resto", 14, 22);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Mulai Berlaku: ${startDateStr}`, 14, 28);
+    
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 116, 139);
+    doc.text('* Dokumen Arsip Resmi HRD (Pola Standar Siklus Mingguan)', pageWidth - 14, 28, { align: 'right' });
 
     // Build Weekly Data Table
     const headRow = ['Nama Karyawan', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -524,7 +542,7 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     });
 
     autoTable(doc, {
-      startY: 28,
+      startY: 32,
       head: [headRow],
       body: bodyRows,
       theme: 'grid',
@@ -537,6 +555,7 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
       didParseCell: function(data) {
         if (data.section === 'body' && data.column.index > 0) {
            const val = data.cell.raw;
+           data.cell.styles.fontStyle = 'bold'; // <-- Make shift code BOLD
            if (val === 'P') data.cell.styles.textColor = [37, 99, 235];
            else if (val === 'M') data.cell.styles.textColor = [5, 150, 105];
            else if (val === 'O') data.cell.styles.textColor = [220, 38, 38];
