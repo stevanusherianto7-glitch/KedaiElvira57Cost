@@ -531,10 +531,11 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                 </div>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {karyawanTab === 'jadwal' && (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
+        {karyawanTab === 'jadwal' && (
+          <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
               {/* Monthly/Weekly Toggle */}
               <div className="flex justify-center bg-slate-100 p-1.5 rounded-[1.5rem] w-fit mx-auto shadow-inner">
                 <button 
