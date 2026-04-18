@@ -64,7 +64,6 @@ function AppContent() {
   
   const state = useAppState();
   const {
-    user,
     ingredients,
     setIngredients,
     recipes,
