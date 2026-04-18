@@ -6,6 +6,16 @@ import { formatCurrency } from "../lib/utils";
 import { JOBDESK_MARKDOWN } from "../constants";
 import { SHIFT_CONFIGS } from "../schedulerConstants";
 
+const saveBlob = (doc: jsPDF, filename: string) => {
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: string) => {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -64,14 +74,16 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
       doc.setFont('helvetica', 'italic');
-      doc.text('Kedai Elvera 57', data.settings.margin.left, pageHeight - 10);
+      doc.setTextColor(128, 128, 128);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
       doc.setFont('helvetica', 'normal');
       const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
       doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
     }
   });
 
-  doc.save(`${reportTitle}-${new Date().toLocaleDateString()}.pdf`);
+  saveBlob(doc, `${reportTitle}-${new Date().toLocaleDateString()}.pdf`);
 };
 
 export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Recipe[]) => {
@@ -126,14 +138,16 @@ export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Rec
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
       doc.setFont('helvetica', 'italic');
-      doc.text('Kedai Elvera 57', data.settings.margin.left, pageHeight - 10);
+      doc.setTextColor(128, 128, 128);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Pawon Salam Resto', data.settings.margin.left, pageHeight - 10);
       doc.setFont('helvetica', 'normal');
       const pageNumber = `Halaman ${doc.internal.pages.length - 1}`;
       doc.text(pageNumber, pageWidth - data.settings.margin.right - doc.getTextWidth(pageNumber), pageHeight - 10);
     }
   });
 
-  doc.save(`Laporan_Kontrol_Stok_dan_Penggunaan_Bahan_${new Date().toLocaleDateString()}.pdf`);
+  saveBlob(doc, `Laporan_Kontrol_Stok_dan_Penggunaan_Bahan_${new Date().toLocaleDateString()}.pdf`);
 };
 
 export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[]) => {
@@ -305,13 +319,15 @@ export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[])
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
     doc.setFont('helvetica', 'italic');
-    doc.text('Kedai Elvera 57', 14, pageHeight - 10);
+    doc.setTextColor(128, 128, 128);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Pawon Salam Resto', 14, pageHeight - 10);
     doc.setFont('helvetica', 'normal');
     const pageNumber = `Halaman ${i}`;
     doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
   }
 
-  doc.save(`Resep_${recipe.name}_${new Date().toLocaleDateString()}.pdf`);
+  saveBlob(doc, `Resep_${recipe.name}_${new Date().toLocaleDateString()}.pdf`);
 };
 
 export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivElement>) => {
@@ -331,7 +347,7 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   });
   
   pdf.addImage(imgData, "PNG", 0, 0, 57, (canvas.height * 57) / canvas.width);
-  pdf.save(`closing-report-${new Date().toLocaleDateString()}.pdf`);
+  saveBlob(pdf, `closing-report-${new Date().toLocaleDateString()}.pdf`);
 };
 
 export const handleExportShiftPDF = (employees: Employee[], shifts: Record<string, Record<string, ShiftType>>, monthDates: { dateStr: string; dayName: string; dayNum: string }[], currentDate: Date) => {
@@ -339,7 +355,7 @@ export const handleExportShiftPDF = (employees: Employee[], shifts: Record<strin
   const periodString = currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   doc.setFontSize(18);
   doc.setTextColor(30, 41, 59);
-  doc.text("Jadwal Shift Karyawan Kedai Elvera 57", 14, 15);
+  doc.text("Jadwal Shift Karyawan Pawon Salam Resto", 14, 15);
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
   doc.text(`Periode: ${periodString}`, 14, 22);
@@ -407,7 +423,7 @@ export const handleExportShiftPDF = (employees: Employee[], shifts: Record<strin
     }
   });
   
-  doc.save(`Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
+  saveBlob(doc, `Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
 };
 
 export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Record<string, ShiftType[]>) => {
@@ -417,7 +433,7 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
   doc.text("Pola Jadwal Mingguan Standar", 14, 15);
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
-  doc.text("Kedai Elvera 57", 14, 22);
+  doc.text("Pawon Salam Resto", 14, 22);
 
   const daysOfWeek = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
   const tableHead = [[
@@ -458,5 +474,5 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     }
   });
 
-  doc.save(`Pola_Jadwal_Mingguan.pdf`);
+  saveBlob(doc, `Pola_Jadwal_Mingguan.pdf`);
 };
