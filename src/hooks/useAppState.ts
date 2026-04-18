@@ -2,15 +2,17 @@ import * as React from "react";
 import { Ingredient, Recipe, Employee, Transaction, Expense, Unit, RecipeItem, ShiftType } from "../types";
 import { CATEGORIES } from "../constants";
 import { supabase } from "../lib/supabase";
-import { User } from "@supabase/supabase-js";
+
+// Fixed tenant ID for this resto (no auth required)
+const TENANT_ID = 'elvera57-pawon-salam-resto';
 
 // Helper: convert Employee camelCase to Supabase snake_case
-const employeeToRow = (emp: Employee, userId: string) => ({
+const employeeToRow = (emp: Employee) => ({
   id: emp.id,
   name: emp.name,
   role: emp.role,
   salary: emp.salary,
-  user_id: userId,
+  user_id: TENANT_ID,
 });
 
 // Helper: convert Supabase snake_case row to Employee camelCase
@@ -24,7 +26,6 @@ const rowToEmployee = (row: any): Employee => ({
 });
 
 export function useAppState() {
-  const [user, setUser] = React.useState<User | null>(null);
   const [ingredients, setIngredients] = React.useState<Ingredient[]>([]);
   const [recipes, setRecipes] = React.useState<Recipe[]>([]);
   const [employees, setEmployees] = React.useState<Employee[]>([]);
@@ -46,41 +47,7 @@ export function useAppState() {
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
-  // Auth Listener
-  React.useEffect(() => {
-    let mounted = true;
-    
-    // Get initial session
-    const initAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Session error:", error.message);
-          // If refresh token is invalid, sign out to clear the bad state
-          if (error.message.includes("Refresh Token")) {
-            await supabase.auth.signOut();
-          }
-        }
-        if (mounted) {
-          setUser(session?.user ?? null);
-        }
-      } catch (err) {
-        console.error("Unexpected auth error:", err);
-      }
-    };
-    initAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUser(session?.user ?? null);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  // No auth required - using fixed TENANT_ID for Supabase access
 
   // Load data from Supabase or localStorage
   React.useEffect(() => {
@@ -89,7 +56,7 @@ export function useAppState() {
     const loadData = async () => {
       let supabaseLoaded = false;
       try {
-        if (user) {
+        {
           // Fetch from Supabase with a timeout
           const fetchData = async () => {
             try {
@@ -190,7 +157,7 @@ export function useAppState() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, []);
 
   // Save data to localStorage & Supabase
   React.useEffect(() => {
@@ -198,36 +165,38 @@ export function useAppState() {
     localStorage.setItem("resto_ingredients", JSON.stringify(ingredients));
     
     const syncIngredients = async () => {
-      if (user && ingredients.length > 0) {
+      if (ingredients.length > 0) {
         setIsSyncing(true);
         const ingredientsWithUser = ingredients.map(ing => ({
           ...ing,
-          user_id: user.id
+          user_id: TENANT_ID
         }));
-        await supabase.from('ingredients').upsert(ingredientsWithUser);
+        const { error } = await supabase.from('ingredients').upsert(ingredientsWithUser);
+        if (error) console.error('Ingredient sync error:', error);
         setIsSyncing(false);
       }
     };
     syncIngredients();
-  }, [ingredients, isLoaded, user]);
+  }, [ingredients, isLoaded]);
 
   React.useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("resto_recipes", JSON.stringify(recipes));
 
     const syncRecipes = async () => {
-      if (user && recipes.length > 0) {
+      if (recipes.length > 0) {
         setIsSyncing(true);
         const recipesWithUser = recipes.map(rec => ({
           ...rec,
-          user_id: user.id
+          user_id: TENANT_ID
         }));
-        await supabase.from('recipes').upsert(recipesWithUser);
+        const { error } = await supabase.from('recipes').upsert(recipesWithUser);
+        if (error) console.error('Recipe sync error:', error);
         setIsSyncing(false);
       }
     };
     syncRecipes();
-  }, [recipes, isLoaded, user]);
+  }, [recipes, isLoaded]);
 
   // Track previous employee IDs for delete detection
   const prevEmployeeIdsRef = React.useRef<string[]>([]);
@@ -237,33 +206,33 @@ export function useAppState() {
     localStorage.setItem("resto_employees", JSON.stringify(employees));
 
     const syncEmployees = async () => {
-      if (user) {
-        setIsSyncing(true);
-        
-        // Detect deleted employees
-        const currentIds = employees.map(e => e.id);
-        const deletedIds = prevEmployeeIdsRef.current.filter(id => !currentIds.includes(id));
-        
-        // Delete removed employees from Supabase
-        if (deletedIds.length > 0) {
-          await supabase.from('employees').delete().in('id', deletedIds);
-        }
-        
-        // Upsert remaining employees with proper column mapping
-        if (employees.length > 0) {
-          const employeesForDb = employees.map(emp => employeeToRow(emp, user.id));
-          const { error } = await supabase.from('employees').upsert(employeesForDb);
-          if (error) {
-            console.error('Employee sync error:', error);
-          }
-        }
-        
-        prevEmployeeIdsRef.current = currentIds;
-        setIsSyncing(false);
+      setIsSyncing(true);
+      
+      // Detect deleted employees
+      const currentIds = employees.map(e => e.id);
+      const deletedIds = prevEmployeeIdsRef.current.filter(id => !currentIds.includes(id));
+      
+      // Delete removed employees from Supabase
+      if (deletedIds.length > 0) {
+        await supabase.from('employees').delete().in('id', deletedIds);
       }
+      
+      // Upsert remaining employees with proper column mapping
+      if (employees.length > 0) {
+        const employeesForDb = employees.map(emp => employeeToRow(emp));
+        const { error } = await supabase.from('employees').upsert(employeesForDb);
+        if (error) {
+          console.error('Employee sync error:', error);
+        } else {
+          console.log('✅ Employees synced to Supabase:', employees.length);
+        }
+      }
+      
+      prevEmployeeIdsRef.current = currentIds;
+      setIsSyncing(false);
     };
     syncEmployees();
-  }, [employees, isLoaded, user]);
+  }, [employees, isLoaded]);
 
   React.useEffect(() => {
     if (!isLoaded) return;
@@ -286,7 +255,7 @@ export function useAppState() {
     localStorage.setItem("resto-shift-data", JSON.stringify(shifts));
 
     const syncShifts = async () => {
-      if (user && Object.keys(shifts).length > 0) {
+      if (Object.keys(shifts).length > 0) {
         setIsSyncing(true);
         const shiftList: any[] = [];
         Object.entries(shifts).forEach(([employee_id, days]) => {
@@ -295,13 +264,11 @@ export function useAppState() {
               employee_id,
               date,
               shift_type,
-              user_id: user.id
+              user_id: TENANT_ID
             });
           });
         });
         
-        // Supabase upsert requires unique constraint. In this case, employee_id + date.
-        // Assuming the table unique constraint is (employee_id, date)
         if (shiftList.length > 0) {
           await supabase.from('shifts').upsert(shiftList, { onConflict: 'employee_id,date' });
         }
@@ -309,7 +276,7 @@ export function useAppState() {
       }
     };
     syncShifts();
-  }, [shifts, isLoaded, user]);
+  }, [shifts, isLoaded]);
 
   // Sync Patterns to Supabase
   React.useEffect(() => {
@@ -317,30 +284,28 @@ export function useAppState() {
     localStorage.setItem("resto-shift-pattern", JSON.stringify(weeklyPattern));
 
     const syncPatterns = async () => {
-      if (user && Object.keys(weeklyPattern).length > 0) {
+      if (Object.keys(weeklyPattern).length > 0) {
         setIsSyncing(true);
         const patternList = Object.entries(weeklyPattern).map(([employee_id, pattern]) => ({
           employee_id,
           pattern,
-          user_id: user.id
+          user_id: TENANT_ID
         }));
         await supabase.from('shift_patterns').upsert(patternList, { onConflict: 'employee_id' });
         setIsSyncing(false);
       }
     };
     syncPatterns();
-  }, [weeklyPattern, isLoaded, user]);
+  }, [weeklyPattern, isLoaded]);
 
   const deleteIngredient = (id: string) => {
     setIngredients(ingredients.filter(ing => ing.id !== id));
   };
 
   const deleteEmployee = async (id: string) => {
-    // Delete from Supabase first if user is logged in
-    if (user) {
-      const { error } = await supabase.from('employees').delete().eq('id', id);
-      if (error) console.error('Failed to delete employee from Supabase:', error);
-    }
+    // Delete from Supabase
+    const { error } = await supabase.from('employees').delete().eq('id', id);
+    if (error) console.error('Failed to delete employee from Supabase:', error);
     setEmployees(employees.filter(emp => emp.id !== id));
   };
 
