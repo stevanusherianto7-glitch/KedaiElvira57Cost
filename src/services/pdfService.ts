@@ -316,13 +316,15 @@ export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[])
     doc.setPage(i);
     const pageSize = doc.internal.pageSize;
     const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-    doc.setFontSize(8);
-    doc.setTextColor(128, 128, 128);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(128, 128, 128);
+    
+    // Footer Branding - Pawon Salam Resto (Italic, 11pt)
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
     doc.setFont('helvetica', 'italic');
     doc.text('Pawon Salam Resto', 14, pageHeight - 10);
+    
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     const pageNumber = `Halaman ${i}`;
     doc.text(pageNumber, pageWidth - 14 - doc.getTextWidth(pageNumber), pageHeight - 10);
   }

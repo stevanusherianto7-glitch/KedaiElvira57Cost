@@ -121,9 +121,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div 
+                          ref={(el) => {
+                            if (el) {
+                              const width = Math.min(100, (ing.stockQuantity / (ing.lowStockThreshold || 1)) * 100);
+                              el.style.setProperty('width', `${width}%`);
+                            }
+                          }}
                           className="h-full bg-rose-500 rounded-full transition-all duration-500" 
-                          style={{ width: `${Math.min(100, (ing.stockQuantity / (ing.lowStockThreshold || 1)) * 100)}%` }}
-                        ></div>
+                        />
                       </div>
                     </div>
                   </div>
