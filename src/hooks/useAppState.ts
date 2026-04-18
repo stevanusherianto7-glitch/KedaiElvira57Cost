@@ -4,6 +4,25 @@ import { CATEGORIES } from "../constants";
 import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 
+// Helper: convert Employee camelCase to Supabase snake_case
+const employeeToRow = (emp: Employee, userId: string) => ({
+  id: emp.id,
+  name: emp.name,
+  role: emp.role,
+  salary: emp.salary,
+  user_id: userId,
+});
+
+// Helper: convert Supabase snake_case row to Employee camelCase
+const rowToEmployee = (row: any): Employee => ({
+  id: row.id,
+  name: row.name,
+  role: row.role,
+  salary: row.salary,
+  avatarColor: row.avatar_color || undefined,
+  initials: row.initials || undefined,
+});
+
 export function useAppState() {
   const [user, setUser] = React.useState<User | null>(null);
   const [ingredients, setIngredients] = React.useState<Ingredient[]>([]);
@@ -68,6 +87,7 @@ export function useAppState() {
     let mounted = true;
     
     const loadData = async () => {
+      let supabaseLoaded = false;
       try {
         if (user) {
           // Fetch from Supabase with a timeout
@@ -83,9 +103,12 @@ export function useAppState() {
               const { data: patternData } = await supabase.from('shift_patterns').select('*');
 
               if (mounted) {
-                if (ingData) setIngredients(ingData);
+                if (ingData) { setIngredients(ingData); supabaseLoaded = true; }
                 if (recData) setRecipes(recData);
-                if (empData) setEmployees(empData);
+                if (empData) {
+                  setEmployees(empData.map(rowToEmployee));
+                  supabaseLoaded = true;
+                }
                 if (transData) setTransactions(transData);
                 
                 if (shiftData) {
@@ -118,25 +141,39 @@ export function useAppState() {
           });
         }
         
-        // Always try to load from localStorage as well or as fallback
-        try {
-          const savedIngredients = localStorage.getItem("resto_ingredients");
-          const savedRecipes = localStorage.getItem("resto_recipes");
-          const savedEmployees = localStorage.getItem("resto_employees");
-          const savedTransactions = localStorage.getItem("resto_transactions");
-          const savedExpenses = localStorage.getItem("resto_expenses");
-          const savedPettyCash = localStorage.getItem("resto_petty_cash");
-  
-          if (mounted) {
-            if (savedIngredients && ingredients.length === 0) setIngredients(JSON.parse(savedIngredients));
-            if (savedRecipes && recipes.length === 0) setRecipes(JSON.parse(savedRecipes));
-            if (savedEmployees && employees.length === 0) setEmployees(JSON.parse(savedEmployees));
-            if (savedTransactions && transactions.length === 0) setTransactions(JSON.parse(savedTransactions));
-            if (savedExpenses && expenses.length === 0) setExpenses(JSON.parse(savedExpenses));
-            if (savedPettyCash) setPettyCash(Number(savedPettyCash));
+        // Only load from localStorage if Supabase didn't provide data
+        if (!supabaseLoaded) {
+          try {
+            const savedIngredients = localStorage.getItem("resto_ingredients");
+            const savedRecipes = localStorage.getItem("resto_recipes");
+            const savedEmployees = localStorage.getItem("resto_employees");
+            const savedTransactions = localStorage.getItem("resto_transactions");
+            const savedExpenses = localStorage.getItem("resto_expenses");
+            const savedPettyCash = localStorage.getItem("resto_petty_cash");
+    
+            if (mounted) {
+              if (savedIngredients) setIngredients(JSON.parse(savedIngredients));
+              if (savedRecipes) setRecipes(JSON.parse(savedRecipes));
+              if (savedEmployees) setEmployees(JSON.parse(savedEmployees));
+              if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
+              if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+              if (savedPettyCash) setPettyCash(Number(savedPettyCash));
+            }
+          } catch (e) {
+            console.error("LocalStorage parse error:", e);
           }
-        } catch (e) {
-          console.error("LocalStorage parse error:", e);
+        } else {
+          // Still load expenses and petty cash from localStorage (not in Supabase)
+          try {
+            const savedExpenses = localStorage.getItem("resto_expenses");
+            const savedPettyCash = localStorage.getItem("resto_petty_cash");
+            if (mounted) {
+              if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+              if (savedPettyCash) setPettyCash(Number(savedPettyCash));
+            }
+          } catch (e) {
+            console.error("LocalStorage parse error:", e);
+          }
         }
       } catch (error) {
         console.error("Error in loadData sequence:", error);
@@ -192,18 +229,36 @@ export function useAppState() {
     syncRecipes();
   }, [recipes, isLoaded, user]);
 
+  // Track previous employee IDs for delete detection
+  const prevEmployeeIdsRef = React.useRef<string[]>([]);
+
   React.useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("resto_employees", JSON.stringify(employees));
 
     const syncEmployees = async () => {
-      if (user && employees.length > 0) {
+      if (user) {
         setIsSyncing(true);
-        const employeesWithUser = employees.map(emp => ({
-          ...emp,
-          user_id: user.id
-        }));
-        await supabase.from('employees').upsert(employeesWithUser);
+        
+        // Detect deleted employees
+        const currentIds = employees.map(e => e.id);
+        const deletedIds = prevEmployeeIdsRef.current.filter(id => !currentIds.includes(id));
+        
+        // Delete removed employees from Supabase
+        if (deletedIds.length > 0) {
+          await supabase.from('employees').delete().in('id', deletedIds);
+        }
+        
+        // Upsert remaining employees with proper column mapping
+        if (employees.length > 0) {
+          const employeesForDb = employees.map(emp => employeeToRow(emp, user.id));
+          const { error } = await supabase.from('employees').upsert(employeesForDb);
+          if (error) {
+            console.error('Employee sync error:', error);
+          }
+        }
+        
+        prevEmployeeIdsRef.current = currentIds;
         setIsSyncing(false);
       }
     };
@@ -280,7 +335,12 @@ export function useAppState() {
     setIngredients(ingredients.filter(ing => ing.id !== id));
   };
 
-  const deleteEmployee = (id: string) => {
+  const deleteEmployee = async (id: string) => {
+    // Delete from Supabase first if user is logged in
+    if (user) {
+      const { error } = await supabase.from('employees').delete().eq('id', id);
+      if (error) console.error('Failed to delete employee from Supabase:', error);
+    }
     setEmployees(employees.filter(emp => emp.id !== id));
   };
 
