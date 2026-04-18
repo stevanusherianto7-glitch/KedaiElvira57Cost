@@ -387,10 +387,23 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
   doc.setFont('helvetica', 'normal');
   doc.text(`Periode: ${periodString}`, 14, 22);
 
-  // 2. Table Image (Method 2)
-  const imgWidth = pageWidth - 28;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  doc.addImage(imgData, 'PNG', 14, 30, imgWidth, imgHeight);
+  // 2. Table Image (Method 2) with Auto-Scaling to fit A4 height
+  const margin = 14;
+  const maxImgWidth = pageWidth - (margin * 2);
+  const maxImgHeight = pageHeight - 45; // Space for Header and Footer
+  
+  let imgWidth = maxImgWidth;
+  let imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+  // Scale down if image is too tall for A4
+  if (imgHeight > maxImgHeight) {
+    imgHeight = maxImgHeight;
+    imgWidth = (canvas.width * imgHeight) / canvas.height;
+  }
+
+  // Center horizontally within margins
+  const xPos = (pageWidth - imgWidth) / 2;
+  doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
 
   // 3. Footer Branding (Method 1)
   doc.setFontSize(11);
@@ -430,10 +443,21 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
   doc.setFont('helvetica', 'normal');
   doc.text("Pawon Salam Resto", 14, 22);
 
-  // 2. Table Image (Method 2)
-  const imgWidth = pageWidth - 28;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  doc.addImage(imgData, 'PNG', 14, 30, imgWidth, imgHeight);
+  // 2. Table Image (Method 2) with Auto-Scaling to fit A4 height
+  const margin = 14;
+  const maxImgWidth = pageWidth - (margin * 2);
+  const maxImgHeight = pageHeight - 45; 
+  
+  let imgWidth = maxImgWidth;
+  let imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+  if (imgHeight > maxImgHeight) {
+    imgHeight = maxImgHeight;
+    imgWidth = (canvas.width * imgHeight) / canvas.height;
+  }
+
+  const xPos = (pageWidth - imgWidth) / 2;
+  doc.addImage(imgData, 'PNG', xPos, 30, imgWidth, imgHeight);
 
   // 3. Footer Branding (Method 1)
   doc.setFontSize(11);
