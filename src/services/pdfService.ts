@@ -8,12 +8,22 @@ import { SHIFT_CONFIGS } from "../schedulerConstants";
 
 const saveBlob = (doc: jsPDF, filename: string) => {
   const blob = doc.output('blob');
-  const url = URL.createObjectURL(blob);
+  const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
+  
+  // High-reliability download approach
+  link.style.display = 'none';
   link.href = url;
-  link.download = filename;
+  link.setAttribute('download', filename);
+  
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  
+  // Cleanup with delay to ensure browser triggers download
+  setTimeout(() => {
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }, 100);
 };
 
 export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: string) => {
