@@ -14,7 +14,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 100, className = "" }) => {
       style={{ width: size, height: size }}
     >
       <img 
-        src="/logo-512.png" 
+        src="/logo-transparent.png" 
         alt="Elvera 57" 
         className="w-full h-full object-contain"
       />

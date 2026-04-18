@@ -3,8 +3,8 @@
   "short_name": "Elvera 57",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#064e3b",
+  "theme_color": "#064e3b",
   "icons": [
     {
       "src": "logo-192.png",
