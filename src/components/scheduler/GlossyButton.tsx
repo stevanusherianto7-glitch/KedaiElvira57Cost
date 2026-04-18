@@ -4,14 +4,21 @@ import { ShiftType } from '../../types';
 import { SHIFT_CONFIGS } from '../../schedulerConstants';
 
 interface GlossyButtonProps {
-  type: ShiftType;
+  type: ShiftType | string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   onClick?: () => void;
   selected?: boolean;
 }
 
 const GlossyButton: React.FC<GlossyButtonProps> = ({ type, size = 'md', onClick, selected = false }) => {
-  const config = SHIFT_CONFIGS[type];
+  // Defensive normalization to prevent React crashes if data from DB is mismatched
+  const normalizedType = (type || '').toString().toUpperCase();
+  const validTypes = [ShiftType.PAGI, ShiftType.MIDDLE, ShiftType.LIBUR];
+  const safeType = validTypes.includes(normalizedType as ShiftType) 
+                    ? (normalizedType as ShiftType) 
+                    : ShiftType.LIBUR;
+  
+  const config = SHIFT_CONFIGS[safeType];
   
   const sizeClasses = {
     sm: 'w-8 h-8 text-[10px]',
@@ -21,9 +28,13 @@ const GlossyButton: React.FC<GlossyButtonProps> = ({ type, size = 'md', onClick,
   };
 
   const sphereColor = 
-    type === ShiftType.PAGI ? 'sphere-blue' :
-    type === ShiftType.MIDDLE ? 'sphere-green' :
+    safeType === ShiftType.PAGI ? 'sphere-blue' :
+    safeType === ShiftType.MIDDLE ? 'sphere-green' :
     'sphere-red';
+
+  if (!config) {
+    return <div className={cn("rounded-full bg-slate-200 animate-pulse", sizeClasses[size])} />;
+  }
 
   return (
     <button
@@ -32,7 +43,7 @@ const GlossyButton: React.FC<GlossyButtonProps> = ({ type, size = 'md', onClick,
         "sphere-base",
         sphereColor,
         sizeClasses[size],
-        selected ? "ring-4 ring-white shadow-xl scale-110 z-10" : "shadow-md",
+        selected ? "ring-4 ring-white shadow-xl scale-110 z-10" : "shadow-md"
       )}
     >
       <div className="sphere-highlight" />
