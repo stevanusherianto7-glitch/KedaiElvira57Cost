@@ -173,7 +173,7 @@ export const handleExportJobdeskPDF = (selectedTasks: string[], reportTitle: str
     saveBlob(doc, `${reportTitle}-${new Date().toLocaleDateString()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -243,7 +243,7 @@ export const handleExportInventoryPDF = (ingredients: Ingredient[], recipes: Rec
     saveBlob(doc, `Laporan_Kontrol_Stok_dan_Penggunaan_Bahan_${new Date().toLocaleDateString()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -433,7 +433,7 @@ export const handleExportRecipePDF = (recipe: Recipe, ingredients: Ingredient[])
     saveBlob(doc, `Resep_${recipe.name}_${new Date().toLocaleDateString()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -462,7 +462,7 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
     saveBlob(pdf, `closing-report-${new Date().toLocaleDateString()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -521,7 +521,7 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
     saveBlob(doc, `Jadwal_Shift_${periodString.replace(/\s/g, '_')}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -576,7 +576,7 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
     saveBlob(doc, `Pola_Jadwal_Mingguan.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -683,7 +683,7 @@ export const handleExportSlipPDF = (employee: Employee | null) => {
     saveBlob(doc, `Slip_Gaji_${employee.name.replace(/\s/g, '_')}_${periodString.replace(/\s/g, '_')}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${error instanceof Error ? error.stack || error.message : String(error)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
@@ -749,9 +749,9 @@ export const savePDF = async ({ headerSelector = '#header', tableData, tableHead
     });
 
     saveBlob(doc, 'report.pdf');
-  } catch (err) {
+  } catch (err: any) {
     console.error("PDF Export Error:", err);
-    alert("Terjadi kesalahan saat mengekspor PDF.");
+    alert(`Terjadi kesalahan sistem saat mengekspor PDF.\n\nError Log: ${err instanceof Error ? err.stack || err.message : String(err)}`);
   } finally {
     hideLoadingOverlay(overlay);
   }
