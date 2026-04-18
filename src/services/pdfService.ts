@@ -332,18 +332,7 @@ export const handleExportClosingPDF = async (reportRef: React.RefObject<HTMLDivE
   const canvas = await html2canvas(reportRef.current, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => {
-      const elements = clonedDoc.getElementsByTagName("*");
-      for (let i = 0; i < elements.length; i++) {
-        const el = elements[i] as HTMLElement;
-        const style = window.getComputedStyle(el);
-        el.style.color = style.color;
-        el.style.backgroundColor = style.backgroundColor;
-        el.style.borderColor = style.borderColor;
-      }
-    }
+    backgroundColor: "#ffffff"
   });
   
   const imgData = canvas.toDataURL("image/png");
@@ -363,18 +352,7 @@ export const handleExportShiftPDF = async (gridRef: React.RefObject<HTMLDivEleme
   const canvas = await html2canvas(gridRef.current, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => {
-      const elements = clonedDoc.getElementsByTagName("*");
-      for (let i = 0; i < elements.length; i++) {
-        const el = elements[i] as HTMLElement;
-        const style = window.getComputedStyle(el);
-        el.style.color = style.color;
-        el.style.backgroundColor = style.backgroundColor;
-        el.style.borderColor = style.borderColor;
-      }
-    }
+    backgroundColor: "#ffffff"
   });
   
   const imgData = canvas.toDataURL("image/png");
@@ -431,18 +409,7 @@ export const handleExportPatternPDF = async (patternRef: React.RefObject<HTMLDiv
   const canvas = await html2canvas(patternRef.current, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    onclone: (clonedDoc) => {
-      const elements = clonedDoc.getElementsByTagName("*");
-      for (let i = 0; i < elements.length; i++) {
-        const el = elements[i] as HTMLElement;
-        const style = window.getComputedStyle(el);
-        el.style.color = style.color;
-        el.style.backgroundColor = style.backgroundColor;
-        el.style.borderColor = style.borderColor;
-      }
-    }
+    backgroundColor: "#ffffff"
   });
   
   const imgData = canvas.toDataURL("image/png");
