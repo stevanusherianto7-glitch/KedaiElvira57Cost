@@ -284,140 +284,93 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar Mini - Only for Data and Jobdesk */}
-        {(karyawanTab === 'data' || karyawanTab === 'jobdesk') && (
-          <div className="lg:col-span-3 space-y-6">
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 mb-4">Daftar Anggota Tim</h4>
-            {employees.map(emp => (
-              <Card 
-                key={emp.id} 
-                className={cn(
-                  "border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all group rounded-2xl cursor-pointer",
-                  selectedEmployeeForSlip?.id === emp.id && karyawanTab === 'slip' ? "ring-2 ring-indigo-500" : ""
-                )}
-                onClick={() => {
-                  if (karyawanTab === 'slip') {
-                    setSelectedEmployeeForSlip(emp);
-                  }
-                }}
-              >
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                      <Users className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); /* edit functionality */ }} 
-                        className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"
-                        title="Edit Karyawan"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); deleteEmployee(emp.id); }} 
-                        className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
-                        title="Hapus Karyawan"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900 truncate leading-tight uppercase tracking-tight">{emp.name.toUpperCase()}</h3>
-                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1">{emp.role.toUpperCase()}</p>
-                  </div>
-                  <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                    <p className="text-xs font-black text-slate-900">{formatCurrency(emp.salary)}</p>
-                    <Badge className="bg-slate-50 text-slate-400 border-none text-[8px] font-black px-2 py-0.5">AKTIF</Badge>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-        )}
-
-        {/* Content Area (Right) */}
-        <div className={cn(
-          (karyawanTab === 'data' || karyawanTab === 'jobdesk') ? "lg:col-span-9" : "lg:col-span-12"
-        )}>
+      <div>
+        {/* Content Area (Full Width) */}
+        <div className="lg:col-span-12">
           {karyawanTab === 'data' && (
-            <div className="p-20 text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-inner">
-                <Users className="w-12 h-12 text-slate-200" />
-              </div>
-              <div className="max-w-md mx-auto">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">INFORMASI DATA KARYAWAN</h3>
-                <p className="text-slate-400 font-medium text-sm mt-2 leading-relaxed italic">
-                  Gunakan daftar di sebelah kiri untuk melihat detail anggota tim, menghapus, atau mengubah data pokok mereka.
-                </p>
+            <div className="space-y-8 animate-in fade-in duration-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {employees.map(emp => (
+                  <Card 
+                    key={emp.id} 
+                    className="border-none shadow-sm bg-white overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all group rounded-3xl cursor-pointer"
+                  >
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-500 transition-colors shadow-inner">
+                          <Users className="w-6 h-6 text-slate-300 group-hover:text-white transition-colors" />
+                        </div>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); /* edit functionality */ }} 
+                            className="p-2.5 bg-slate-50 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-md transition-all"
+                            title="Edit Karyawan"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteEmployee(emp.id); }} 
+                            className="p-2.5 bg-slate-50 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-white hover:shadow-md transition-all"
+                            title="Hapus Karyawan"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-slate-900 truncate uppercase tracking-tight">{emp.name.toUpperCase()}</h3>
+                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1.5">{emp.role.toUpperCase()}</p>
+                      </div>
+                      <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Base Salary</p>
+                          <p className="text-sm font-black text-slate-900">{formatCurrency(emp.salary)}</p>
+                        </div>
+                        <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] font-black px-3 py-1 rounded-lg">AKTIF</Badge>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
 
           {karyawanTab === 'jobdesk' && (
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-              <div className="xl:col-span-4 space-y-6">
-                <Card className="border-none shadow-sm bg-white rounded-3xl p-8 space-y-8">
-                  <h3 className="font-black text-slate-900 tracking-tight uppercase text-sm">Kustomisasi Laporan SPO</h3>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Judul Laporan</label>
-                      <Input 
-                        value={reportTitle}
-                        onChange={(e) => setReportTitle(e.target.value)}
-                        className="h-14 rounded-2xl border-slate-100 font-bold bg-slate-50/50 focus:bg-white"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleExportJobdeskPDF}
-                      className="w-full h-14 bg-slate-900 hover:bg-black rounded-2xl font-black tracking-widest shadow-lg active:scale-95 transition-all"
-                    >
-                      <FileDown className="w-6 h-6 mr-2" />
-                      EXPORT PDF
-                    </Button>
-                  </div>
-                </Card>
-
-                <Card className="border-none shadow-sm bg-white rounded-3xl p-8 space-y-6">
-                  <h3 className="font-black text-slate-900 tracking-tight uppercase text-sm">Filter Tugas (HPP Sync)</h3>
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 scheduler-scrollbar">
-                    {JOBDESK_MARKDOWN.split('\n')
-                      .filter(line => line.includes('* [ ]'))
-                      .map((line, idx) => {
-                        const taskName = line.replace('* [ ]', '').trim();
-                        return (
-                          <label key={idx} className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 cursor-pointer transition-all border border-transparent hover:border-slate-100">
-                            <input 
-                              type="checkbox" 
-                              checked={selectedTasks.includes(taskName)}
-                              onChange={() => toggleTask(taskName)}
-                              className="w-5 h-5 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                            <span className="text-xs font-bold text-slate-600 uppercase tracking-tight">{taskName}</span>
-                          </label>
-                        );
-                      })}
-                  </div>
-                </Card>
+            <div className="space-y-8 animate-in fade-in duration-700">
+              {/* Utility Header for Jobdesk */}
+              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-1 w-full space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-1">Judul Laporan SPO</label>
+                  <Input 
+                    value={reportTitle}
+                    onChange={(e) => setReportTitle(e.target.value)}
+                    className="h-14 rounded-2xl border-slate-100 font-bold bg-slate-50/50 focus:bg-white text-slate-900"
+                    placeholder="Masukkan Judul Laporan..."
+                  />
+                </div>
+                <div className="flex gap-4 w-full md:w-auto self-end">
+                   <Button 
+                    onClick={handleExportJobdeskPDF}
+                    className="h-14 px-10 bg-slate-900 hover:bg-black rounded-2xl font-black tracking-widest shadow-xl active:scale-95 transition-all min-w-[200px]"
+                  >
+                    <FileDown className="w-6 h-6 mr-3" />
+                    EXPORT PDF
+                  </Button>
+                </div>
               </div>
 
-              <div className="xl:col-span-8">
-                <Card className="border-none shadow-sm bg-white rounded-[3rem] overflow-hidden border border-slate-50">
-                  <div className="p-10 prose prose-sm sm:prose-base prose-slate max-w-none 
-                    prose-headings:text-slate-900 prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight
-                    prose-p:text-slate-500 prose-p:font-medium prose-p:italic
-                    prose-li:text-slate-600 prose-li:font-bold prose-li:uppercase prose-li:text-[11px] prose-li:tracking-wide
-                    prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg no-scrollbar">
-                    <Markdown remarkPlugins={[remarkGfm]}>
-                      {generateFilteredMarkdown()}
-                    </Markdown>
-                  </div>
-                </Card>
-              </div>
+              {/* Full Width Markdown Content */}
+              <Card className="border-none shadow-sm bg-white rounded-[3rem] overflow-hidden border border-slate-50">
+                <div className="p-12 prose prose-sm sm:prose-base prose-slate max-w-none 
+                  prose-headings:text-slate-900 prose-headings:font-black prose-headings:uppercase prose-headings:tracking-tight
+                  prose-p:text-slate-500 prose-p:font-medium prose-p:italic
+                  prose-li:text-slate-600 prose-li:font-bold prose-li:uppercase prose-li:text-[11px] prose-li:tracking-wide
+                  prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl no-scrollbar bg-white">
+                  <Markdown remarkPlugins={[remarkGfm]}>
+                    {generateFilteredMarkdown()}
+                  </Markdown>
+                </div>
+              </Card>
             </div>
           )}
 
