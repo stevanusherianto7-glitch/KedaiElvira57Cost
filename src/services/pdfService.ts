@@ -323,11 +323,27 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     const doc = new jsPDF({ compress: true, orientation: 'l', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
+    // Title: POLA JADWAL SHIFT MINGGUAN
     doc.setFontSize(14);
     doc.setTextColor(30, 41, 59);
     doc.setFont(FONT_FAMILY, 'bold');
-    doc.text("POLA JADWAL MINGGUAN STANDAR", pageWidth / 2, 15, { align: 'center' });
+    doc.text("POLA JADWAL SHIFT MINGGUAN", pageWidth / 2, 15, { align: 'center' });
+
+    // Subtitle: Berlaku Mulai Tanggal dd/mm/yy
+    const dd = String(currentDate.getDate()).padStart(2, '0');
+    const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const yy = String(currentDate.getFullYear()).slice(-2);
+    doc.setFontSize(10);
+    doc.setFont(FONT_FAMILY, 'normal');
+    doc.text(`Berlaku Mulai Tanggal ${dd}/${mm}/${yy}`, pageWidth / 2, 21, { align: 'center' });
     
+    // Shift color mapping: P=blue, M=green, O=red
+    const shiftCellColors: Record<string, [number, number, number]> = {
+      'P': [66, 133, 244],   // Blue
+      'M': [52, 168, 83],    // Green
+      'O': [234, 67, 53],    // Red
+    };
+
     const headRow = ['Nama Karyawan', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     const bodyRows = employees.map(emp => {
       const row = [emp.name.toUpperCase()];
@@ -339,13 +355,29 @@ export const handleExportPatternPDF = (employees: Employee[], weeklyPattern: Rec
     });
 
     autoTable(doc, {
-      startY: 22,
+      startY: 27,
       head: [headRow],
       body: bodyRows,
       theme: 'grid',
-      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255] },
-      bodyStyles: { halign: 'center', fontSize: 9, fontStyle: 'bold' },
+      headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], halign: 'center', fontStyle: 'bold' },
+      bodyStyles: { halign: 'center', fontSize: 9, fontStyle: 'bold', textColor: [0, 0, 0] },
       columnStyles: { 0: { halign: 'left', cellWidth: 50 } },
+      didDrawCell: (data) => {
+        // Color shift cells (columns 1-7, body rows only)
+        if (data.section === 'body' && data.column.index >= 1) {
+          const cellText = data.cell.text[0]?.trim();
+          const bgColor = shiftCellColors[cellText];
+          if (bgColor) {
+            doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+            // Redraw text in black on top of filled cell
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(9);
+            doc.setFont(FONT_FAMILY, 'bold');
+            doc.text(cellText, data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1, { align: 'center' });
+          }
+        }
+      },
       didDrawPage: (data) => addSimpleFooter(doc, data)
     });
 
