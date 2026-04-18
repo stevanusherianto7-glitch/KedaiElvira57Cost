@@ -285,8 +285,9 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Sidebar Mini (untuk berpindah cepat antar sub-page jika diinginkan, atau cukup Employee List) */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* Sidebar Mini - Only for Data and Jobdesk */}
+        {(karyawanTab === 'data' || karyawanTab === 'jobdesk') && (
+          <div className="lg:col-span-3 space-y-6">
           <div className="space-y-3">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 mb-4">Daftar Anggota Tim</h4>
             {employees.map(emp => (
@@ -337,9 +338,12 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             ))}
           </div>
         </div>
+        )}
 
         {/* Content Area (Right) */}
-        <div className="lg:col-span-9">
+        <div className={cn(
+          (karyawanTab === 'data' || karyawanTab === 'jobdesk') ? "lg:col-span-9" : "lg:col-span-12"
+        )}>
           {karyawanTab === 'data' && (
             <div className="p-20 text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
               <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-inner">
@@ -418,7 +422,37 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
           )}
 
           {karyawanTab === 'slip' && (
-            <div className="space-y-8">
+            <div className="space-y-10">
+              {/* Horizontal Employee Selector */}
+              <div className="bg-white/50 backdrop-blur-sm p-4 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-4 overflow-x-auto pb-4 mini-scrollbar-x snap-x">
+                  {employees.map(emp => (
+                    <Card 
+                      key={emp.id} 
+                      className={cn(
+                        "min-w-[180px] shrink-0 border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all group rounded-2xl cursor-pointer snap-start",
+                        selectedEmployeeForSlip?.id === emp.id ? "ring-4 ring-indigo-500 shadow-indigo-200" : "opacity-60 hover:opacity-100"
+                      )}
+                      onClick={() => setSelectedEmployeeForSlip(emp)}
+                    >
+                      <div className="p-4 flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                          selectedEmployeeForSlip?.id === emp.id ? "bg-indigo-600 text-white" : "bg-slate-50 text-slate-300"
+                        )}>
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-[10px] font-black text-slate-900 truncate uppercase tracking-tight">{emp.name.toUpperCase()}</h3>
+                          <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.2em] truncate">{emp.role.toUpperCase()}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-8">
               {selectedEmployeeForSlip ? (
                 <Card className="border-none shadow-2xl bg-white rounded-[3rem] overflow-hidden max-w-2xl mx-auto border border-slate-50 animate-in zoom-in-95 duration-500">
                   <div className="p-14 space-y-10">
