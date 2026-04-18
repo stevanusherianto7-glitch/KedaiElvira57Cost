@@ -32,13 +32,13 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
       {/* Row 1: View Toggle & Time Cheat Sheet */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Toggle View */}
-        <div className="flex bg-slate-100 p-1.5 rounded-[1.5rem] w-full shadow-inner">
+        <div className="flex h-16 bg-slate-100 p-1.5 rounded-[1.5rem] w-full shadow-inner">
           <button 
             onClick={() => onViewChange('grid')}
             className={cn(
-              "flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+              "flex-1 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
               view === 'grid' ? "bg-white text-slate-900 shadow-lg" : "text-slate-400 hover:text-slate-600"
             )}
           >
@@ -47,7 +47,7 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
           <button 
             onClick={() => onViewChange('pattern')}
             className={cn(
-              "flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
+              "flex-1 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
               view === 'pattern' ? "bg-white text-slate-900 shadow-lg" : "text-slate-400 hover:text-slate-600"
             )}
           >
@@ -56,7 +56,7 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
         </div>
 
         {/* Compact Time Cheat Sheet */}
-        <div className="bg-slate-100/80 backdrop-blur-sm border border-slate-200/50 p-4 rounded-[1.5rem] flex flex-col justify-center gap-1.5 shadow-sm">
+        <div className="h-16 bg-slate-100/80 backdrop-blur-sm border border-slate-200/50 px-6 rounded-[1.5rem] flex flex-col justify-center gap-1.5 shadow-sm">
           <div className="flex items-center justify-between text-[9px] font-black tracking-widest">
             <span className="text-slate-500">SENIN - JUMAT</span>
             <span className="text-indigo-600">10.00 - 21.00</span>
@@ -70,9 +70,9 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
       </div>
 
       {/* Row 2: Legend & Month Control */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Legend - Spheres */}
-        <div className="flex items-center justify-around py-3 px-6 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm">
+        <div className="flex h-16 items-center justify-around px-6 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm">
           <div className="flex items-center gap-2">
             <GlossyButton type={ShiftType.PAGI} size="sm" />
             <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">PAGI</span>
@@ -88,7 +88,7 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
         </div>
 
         {/* Month Navigation */}
-        <div className="flex items-center justify-between bg-white border border-slate-100 rounded-full shadow-sm p-1.5">
+        <div className="flex h-16 items-center justify-between bg-white border border-slate-100 rounded-[1.5rem] shadow-sm p-1.5">
           <button 
             onClick={onPreviousMonth} 
             title="Bulan Sebelumnya"
@@ -108,17 +108,17 @@ const SchedulerHeader: React.FC<SchedulerHeaderProps> = ({
       </div>
 
       {/* Row 3: Split PDF Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <button 
           onClick={onExportPDF}
-          className="h-14 px-8 rounded-2xl font-black text-[10px] tracking-[0.2em] bg-white border-2 border-slate-100 text-slate-600 hover:border-indigo-100 hover:text-indigo-600 transition-all flex items-center justify-center shadow-sm active:scale-95 group"
+          className="h-16 px-8 rounded-2xl font-black text-[10px] tracking-[0.2em] bg-white border-2 border-slate-100 text-slate-600 hover:border-indigo-100 hover:text-indigo-600 transition-all flex items-center justify-center shadow-sm active:scale-95 group"
         >
           <FileText size={18} className="mr-3 group-hover:scale-110 transition-transform" />
           PDF MONTHLY
         </button>
         <button 
           onClick={onExportWeeklyPDF}
-          className="h-14 px-8 rounded-2xl font-black text-[10px] tracking-[0.2em] bg-slate-900 text-white hover:bg-black transition-all flex items-center justify-center shadow-xl shadow-slate-200 active:scale-95 group uppercase"
+          className="h-16 px-8 rounded-2xl font-black text-[10px] tracking-[0.2em] bg-slate-900 text-white hover:bg-black transition-all flex items-center justify-center shadow-xl shadow-slate-200 active:scale-95 group uppercase"
         >
           <CalendarDays size={18} className="mr-3 group-hover:scale-110 transition-transform font-black" />
           PDF Weekly
