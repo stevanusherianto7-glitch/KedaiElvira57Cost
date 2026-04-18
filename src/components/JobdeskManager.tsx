@@ -536,58 +536,37 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
 
         {karyawanTab === 'jadwal' && (
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
-              {/* Monthly/Weekly Toggle */}
-              <div className="flex justify-center bg-slate-100 p-1.5 rounded-[1.5rem] w-fit mx-auto shadow-inner">
-                <button 
-                  onClick={() => setSchedulerView('grid')}
-                  className={cn(
-                    "px-10 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
-                    schedulerView === 'grid' ? "bg-white text-slate-900 shadow-lg" : "text-slate-400 hover:text-slate-600"
-                  )}
-                >
-                  Monthly Grid
-                </button>
-                <button 
-                  onClick={() => setSchedulerView('pattern')}
-                  className={cn(
-                    "px-10 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
-                    schedulerView === 'pattern' ? "bg-white text-slate-900 shadow-lg" : "text-slate-400 hover:text-slate-600"
-                  )}
-                >
-                  Weekly Pattern
-                </button>
-              </div>
+            <SchedulerHeader 
+              currentDate={currentDate}
+              onPreviousMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+              onNextMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+              onExportPDF={() => pdfService.handleExportShiftPDF(employees, shifts, monthDates, currentDate)}
+              onExportWeeklyPDF={() => pdfService.handleExportPatternPDF(employees, weeklyPattern)}
+              view={schedulerView}
+              onViewChange={setSchedulerView}
+            />
 
-              {schedulerView === 'grid' ? (
-                <div className="space-y-8">
-                  <SchedulerHeader 
-                    currentDate={currentDate}
-                    onPreviousMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
-                    onNextMonth={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
-                    onExportPDF={() => pdfService.handleExportShiftPDF(employees, shifts, monthDates, currentDate)}
-                    onExportPatternPDF={() => setSchedulerView('pattern')}
-                  />
-                  <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl p-4 sm:p-8 overflow-hidden">
-                     <ScheduleGrid 
-                       employees={employees}
-                       shifts={shifts}
-                       dates={monthDates}
-                       onShiftClick={handleCycleShift}
-                     />
-                  </div>
-                </div>
-              ) : (
-                <PatternManager 
+            {schedulerView === 'grid' ? (
+              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl p-4 sm:p-8 overflow-hidden">
+                <ScheduleGrid 
                   employees={employees}
-                  initialPattern={weeklyPattern}
-                  onSavePattern={setWeeklyPattern}
-                  onApplyPattern={handleApplyPattern}
-                  onBack={() => setSchedulerView('grid')}
-                  currentDate={currentDate}
+                  shifts={shifts}
+                  dates={monthDates}
+                  onShiftClick={handleCycleShift}
                 />
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <PatternManager 
+                employees={employees}
+                initialPattern={weeklyPattern}
+                onSavePattern={setWeeklyPattern}
+                onApplyPattern={handleApplyPattern}
+                onBack={() => setSchedulerView('grid')}
+                currentDate={currentDate}
+              />
+            )}
+          </div>
+        )}
         </div>
       </div>
     </div>

@@ -13,35 +13,6 @@ interface ScheduleGridProps {
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, onShiftClick }) => {
   return (
     <div className="relative z-0 space-y-8">
-      {/* Shift Time Cheat Sheet */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top duration-1000">
-        <div className="bg-slate-50/50 border border-slate-100 p-6 rounded-[2rem] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-500 shadow-sm">
-              <span className="font-black text-xs">SEN-JUM</span>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senin - Jumat</p>
-              <p className="text-lg font-black text-slate-900 tracking-tighter">10.00 - 21.00</p>
-            </div>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-        </div>
-        
-        <div className="bg-rose-50/30 border border-rose-100/50 p-6 rounded-[2rem] flex items-center justify-between group hover:bg-white hover:shadow-xl transition-all">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-rose-500 shadow-sm">
-              <span className="font-black text-xs">SAB-MIN</span>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Sabtu - Minggu</p>
-              <p className="text-lg font-black text-rose-900 tracking-tighter">08.00 - 21.00</p>
-            </div>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
-        </div>
-      </div>
-
       <div className="bg-white min-h-[500px] flex flex-col rounded-[2.5rem] border border-slate-50 overflow-hidden shadow-sm">
         
         {/* Scrollable Container with 1px scrollbar utility */}

@@ -67,22 +67,7 @@ const PatternManager: React.FC<PatternManagerProps> = ({ employees, initialPatte
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-left duration-500">
-      {/* Header - Centered as per Image 2/3 */}
-      <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            title="Kembali"
-            className="w-10 h-10 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-slate-900 flex items-center justify-center transition-all shadow-sm active:scale-95"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex-1 text-center pr-10">
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Pola Jadwal Mingguan</h2>
-              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-0.5">Master Penjadwalan Rutin</p>
-          </div>
-      </div>
-
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Info Box */}
       <div className="bg-emerald-50/50 border border-emerald-100 p-5 rounded-[2rem] flex gap-4">
           <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100 shrink-0">
