@@ -502,7 +502,6 @@ export function useAppState() {
   }, [isLoaded]);
 
   return {
-    user,
     ingredients,
     setIngredients,
     recipes,
