@@ -48,7 +48,7 @@ import {
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { JOBDESK_MARKDOWN } from "../constants";
-import { generateMonthDates, generateShiftsFromPattern } from "../schedulerConstants";
+import { generateMonthDates, generateShiftsFromPattern, AVATAR_COLORS, getEmployeeInitials } from "../schedulerConstants";
 import SchedulerHeader from "./scheduler/SchedulerHeader";
 import ScheduleGrid from "./scheduler/ScheduleGrid";
 import PatternManager from "./scheduler/PatternManager";
@@ -460,33 +460,52 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
 
           {karyawanTab === 'slip' && (
             <div className="space-y-10">
-              {/* Horizontal Employee Selector */}
-              <div className="bg-white/50 backdrop-blur-sm p-4 rounded-[2rem] border border-slate-100 shadow-sm">
-                <div className="flex items-center gap-4 overflow-x-auto pb-4 mini-scrollbar-x snap-x">
-                  {employees.map(emp => (
-                    <Card 
-                      key={emp.id} 
-                      className={cn(
-                        "min-w-[180px] shrink-0 border-none shadow-sm bg-white overflow-hidden hover:shadow-md transition-all group rounded-2xl cursor-pointer snap-start",
-                        selectedEmployeeForSlip?.id === emp.id ? "ring-4 ring-indigo-500 shadow-indigo-200" : "opacity-60 hover:opacity-100"
-                      )}
-                      onClick={() => setSelectedEmployeeForSlip(emp)}
-                    >
-                      <div className="p-4 flex items-center gap-3">
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                          selectedEmployeeForSlip?.id === emp.id ? "bg-indigo-600 text-white" : "bg-slate-50 text-slate-300"
-                        )}>
-                          <Users className="w-5 h-5" />
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-[3rem] shadow-2xl overflow-hidden relative">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-black text-white italic tracking-tight">PILIH KARYAWAN</h3>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">NAVIGASI SLIP GAJI CEPAT</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-6 overflow-x-auto pb-4 mini-scrollbar-x snap-x no-scrollbar w-full md:w-auto px-4">
+                    {employees.map((emp, idx) => {
+                      const isSelected = selectedEmployeeForSlip?.id === emp.id;
+                      const avatarColor = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+                      
+                      return (
+                        <div 
+                          key={emp.id}
+                          onClick={() => setSelectedEmployeeForSlip(emp)}
+                          className="flex flex-col items-center gap-3 cursor-pointer group snap-start shrink-0"
+                        >
+                          <div className={cn(
+                            "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 relative",
+                            isSelected ? "ring-4 ring-indigo-500 scale-110 shadow-lg shadow-indigo-500/20" : "opacity-40 hover:opacity-100 hover:scale-105"
+                          )}>
+                             <div className={cn(
+                               "w-full h-full rounded-full flex items-center justify-center text-white font-black text-lg shadow-inner",
+                               avatarColor
+                             )}>
+                               {getEmployeeInitials(emp.name)}
+                             </div>
+                             {isSelected && (
+                               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-indigo-500 rounded-full border-2 border-slate-900 flex items-center justify-center animate-in zoom-in">
+                                 <CheckCircle2 className="w-3 h-3 text-white" />
+                               </div>
+                             )}
+                          </div>
+                          <span className={cn(
+                            "text-[9px] font-black uppercase tracking-widest transition-colors",
+                            isSelected ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"
+                          )}>
+                            {emp.name.split(' ')[0]}
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="text-[10px] font-black text-slate-900 truncate uppercase tracking-tight">{emp.name.toUpperCase()}</h3>
-                          <p className="text-[8px] text-slate-400 font-black uppercase tracking-[0.2em] truncate">{emp.role.toUpperCase()}</p>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
               </div>
 
               <div className="space-y-8">

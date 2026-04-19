@@ -169,7 +169,10 @@ function AppContent() {
 
   return (
     <Layout activeTab={activeTab} onTabChange={setActiveTab}>
-      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+      <div className={cn(
+        "p-4 lg:p-8 mx-auto transition-all duration-500",
+        activeTab === "karyawan" ? "max-w-none w-full" : "max-w-7xl"
+      )}>
         {activeTab === "home" && (
           <Dashboard 
             transactions={transactions}

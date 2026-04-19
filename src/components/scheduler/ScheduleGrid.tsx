@@ -12,8 +12,8 @@ interface ScheduleGridProps {
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({ employees, shifts, dates, onShiftClick }) => {
   return (
-    <div className="relative z-0 space-y-8">
-      <div className="bg-white min-h-[500px] flex flex-col rounded-[2.5rem] border border-slate-50 overflow-hidden shadow-sm">
+    <div className="relative z-0 space-y-4">
+      <div className="bg-white min-h-[500px] flex flex-col rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-2xl">
         
         {/* Scrollable Container with 1px scrollbar utility */}
         <div className="overflow-x-auto overflow-y-auto flex-1 mini-scrollbar-x touch-pan-x touch-pan-y">
