@@ -118,3 +118,13 @@ export interface PettyCash {
   balance: number;
   lastUpdated: string;
 }
+
+export interface Attendance {
+  id: string;
+  employeeId: string;
+  date: string; // YYYY-MM-DD
+  status: 'Hadir' | 'Izin' | 'Sakit' | 'Alpha';
+  checkIn?: string;
+  checkOut?: string;
+  notes?: string;
+}

@@ -53,11 +53,12 @@ import SchedulerHeader from "./scheduler/SchedulerHeader";
 import ScheduleGrid from "./scheduler/ScheduleGrid";
 import PatternManager from "./scheduler/PatternManager";
 import * as pdfService from "../services/pdfService";
+import { AttendanceGrid } from "./sdm/AttendanceGrid";
 
 interface JobdeskManagerProps {
   employees: Employee[];
-  karyawanTab: 'data' | 'jobdesk' | 'slip' | 'jadwal';
-  setKaryawanTab: (val: 'data' | 'jobdesk' | 'slip' | 'jadwal') => void;
+  karyawanTab: 'data' | 'jobdesk' | 'slip' | 'jadwal' | 'absensi';
+  setKaryawanTab: (val: 'data' | 'jobdesk' | 'slip' | 'jadwal' | 'absensi') => void;
   isAddingEmployee: boolean;
   setIsAddingEmployee: (val: boolean) => void;
   newEmployee: Partial<Employee>;
@@ -77,6 +78,8 @@ interface JobdeskManagerProps {
   setShifts: React.Dispatch<React.SetStateAction<Record<string, Record<string, ShiftType>>>>;
   weeklyPattern: Record<string, ShiftType[]>;
   setWeeklyPattern: React.Dispatch<React.SetStateAction<Record<string, ShiftType[]>>>;
+  attendances: Attendance[];
+  toggleAttendance: (employeeId: string, date: string, status: Attendance['status']) => void;
 }
 
 export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
@@ -100,7 +103,9 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
   shifts,
   setShifts,
   weeklyPattern,
-  setWeeklyPattern
+  setWeeklyPattern,
+  attendances,
+  toggleAttendance
 }) => {
   const [schedulerView, setSchedulerView] = React.useState<'grid' | 'pattern'>('grid');
   const [currentDate, setCurrentDate] = React.useState(new Date());
@@ -148,7 +153,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
     });
   };
 
-  const navigateTo = (tab: 'data' | 'jobdesk' | 'slip' | 'jadwal') => {
+  const navigateTo = (tab: 'data' | 'jobdesk' | 'slip' | 'jadwal' | 'absensi') => {
     setKaryawanTab(tab);
     setIsMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -202,6 +207,15 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             <h3 className="text-xl font-bold text-slate-900 mb-2">Jadwal Shift</h3>
             <p className="text-slate-400 text-sm leading-relaxed">Penjadwalan 3D visual dengan sistem cycle P-M-O.</p>
             <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-indigo-500 transform group-hover:translate-x-2 transition-all" />
+          </div>
+
+          <div onClick={() => navigateTo('absensi')} className="sdm-dashboard-card group">
+            <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-rose-500 transition-colors">
+              <CheckCircle2 className="w-8 h-8 text-rose-500 group-hover:text-white transition-colors" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Absensi Harian</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">Monitoring kehadiran tim secara real-time dan terintegrasi.</p>
+            <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-rose-500 transform group-hover:translate-x-2 transition-all" />
           </div>
 
           <Dialog open={isAddingEmployee} onOpenChange={setIsAddingEmployee}>
@@ -280,6 +294,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             {karyawanTab === 'jobdesk' && "Jobdesk (SPO)"}
             {karyawanTab === 'slip' && "Slip Gaji"}
             {karyawanTab === 'jadwal' && "Jadwal Shift"}
+            {karyawanTab === 'absensi' && "Absensi Harian"}
           </h2>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-8 h-1 bg-indigo-500 rounded-full"></span>
@@ -429,6 +444,29 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Jabatan</p>
                           <p className="text-xs font-black text-slate-500 tracking-widest uppercase">{selectedEmployeeForSlip.role.toUpperCase()}</p>
                         </div>
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Ringkasan Kehadiran</p>
+                          <div className="flex gap-4 mt-2">
+                            <div className="text-center">
+                              <p className="text-xs font-black text-emerald-600">
+                                {attendances.filter(a => a.employeeId === selectedEmployeeForSlip.id && a.status === 'Hadir' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length}
+                              </p>
+                              <p className="text-[7px] font-bold text-slate-400 uppercase">Hadir</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs font-black text-blue-500">
+                                {attendances.filter(a => a.employeeId === selectedEmployeeForSlip.id && a.status === 'Izin' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length}
+                              </p>
+                              <p className="text-[7px] font-bold text-slate-400 uppercase">Izin</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs font-black text-rose-500">
+                                {attendances.filter(a => a.employeeId === selectedEmployeeForSlip.id && a.status === 'Alpha' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length}
+                              </p>
+                              <p className="text-[7px] font-bold text-slate-400 uppercase">Alpha</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div className="space-y-6 text-right">
                         <div>
@@ -445,11 +483,20 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                     <div className="space-y-5 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Gaji Pokok Dasar</span>
-                        <span className="font-black text-slate-900">{formatCurrency(selectedEmployeeForSlip.salary)}</span>
+                        <span className="font-black text-slate-900 line-through opacity-30">{formatCurrency(selectedEmployeeForSlip.salary)}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Tunjangan Operasional</span>
-                        <span className="font-black text-slate-900">{formatCurrency(0)}</span>
+                      <div className="flex justify-between items-center text-emerald-600">
+                        <span className="font-bold uppercase text-[10px] tracking-widest">Penyesuaian Kehadiran</span>
+                        {(() => {
+                          const hadirCount = attendances.filter(a => a.employeeId === selectedEmployeeForSlip.id && a.status === 'Hadir' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length;
+                          const calculatedPay = (selectedEmployeeForSlip.salary / 26) * hadirCount;
+                          return (
+                            <div className="text-right">
+                              <p className="font-black">{formatCurrency(calculatedPay)}</p>
+                              <p className="text-[8px] font-bold">({hadirCount}/26 Hari Kerja)</p>
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Bonus Prestasi (HPP OK)</span>
@@ -460,7 +507,12 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                           <p className="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">Total Penerimaan</p>
                           <span className="text-sm font-black text-slate-400">NET TAKE HOME PAY</span>
                         </div>
-                        <span className="text-3xl font-black text-indigo-600 tracking-tighter">{formatCurrency(selectedEmployeeForSlip.salary)}</span>
+                        <span className="text-3xl font-black text-indigo-600 tracking-tighter">
+                          {(() => {
+                            const hadirCount = attendances.filter(a => a.employeeId === selectedEmployeeForSlip.id && a.status === 'Hadir' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length;
+                            return formatCurrency((selectedEmployeeForSlip.salary / 26) * hadirCount);
+                          })()}
+                        </span>
                       </div>
                     </div>
 
@@ -525,6 +577,14 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
               </div>
             )}
           </div>
+        )}
+
+        {karyawanTab === 'absensi' && (
+          <AttendanceGrid 
+            employees={employees}
+            attendances={attendances}
+            onToggleAttendance={toggleAttendance}
+          />
         )}
         </div>
       </div>

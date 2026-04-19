@@ -87,7 +87,9 @@ function AppContent() {
     shifts,
     setShifts,
     weeklyPattern,
-    setWeeklyPattern
+    setWeeklyPattern,
+    attendances,
+    toggleAttendance
   } = state;
 
   const [selectedRecipe, setSelectedRecipe] = React.useState<Recipe | null>(null);
@@ -226,6 +228,8 @@ function AppContent() {
             setShifts={setShifts}
             weeklyPattern={weeklyPattern}
             setWeeklyPattern={setWeeklyPattern}
+            attendances={attendances}
+            toggleAttendance={toggleAttendance}
           />
         )}
       </div>

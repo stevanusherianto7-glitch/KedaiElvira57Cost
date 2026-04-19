@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Ingredient, Recipe, Employee, Transaction, Expense, Unit, RecipeItem, ShiftType } from "../types";
+import { Ingredient, Recipe, Employee, Transaction, Expense, Unit, RecipeItem, ShiftType, Attendance } from "../types";
 import { CATEGORIES } from "../constants";
 import { supabase } from "../lib/supabase";
 
@@ -30,6 +30,7 @@ export function useAppState() {
   const [recipes, setRecipes] = React.useState<Recipe[]>([]);
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [attendances, setAttendances] = React.useState<Attendance[]>([]);
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [pettyCash, setPettyCash] = React.useState<number>(0);
   const [shifts, setShifts] = React.useState<Record<string, Record<string, ShiftType>>>(() => {
@@ -64,6 +65,7 @@ export function useAppState() {
               const { data: recData } = await supabase.from('recipes').select('*');
               const { data: empData } = await supabase.from('employees').select('*');
               const { data: transData } = await supabase.from('transactions').select('*');
+              const { data: attData } = await supabase.from('attendances').select('*');
               
               // Fetch shifts and patterns
               const { data: shiftData } = await supabase.from('shifts').select('*');
@@ -77,6 +79,7 @@ export function useAppState() {
                   supabaseLoaded = true;
                 }
                 if (transData) setTransactions(transData);
+                if (attData) setAttendances(attData);
                 
                 if (shiftData) {
                   const formattedShifts: Record<string, Record<string, ShiftType>> = {};
@@ -115,6 +118,7 @@ export function useAppState() {
             const savedRecipes = localStorage.getItem("resto_recipes");
             const savedEmployees = localStorage.getItem("resto_employees");
             const savedTransactions = localStorage.getItem("resto_transactions");
+            const savedAttendances = localStorage.getItem("resto_attendances");
             const savedExpenses = localStorage.getItem("resto_expenses");
             const savedPettyCash = localStorage.getItem("resto_petty_cash");
     
@@ -123,6 +127,7 @@ export function useAppState() {
               if (savedRecipes) setRecipes(JSON.parse(savedRecipes));
               if (savedEmployees) setEmployees(JSON.parse(savedEmployees));
               if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
+              if (savedAttendances) setAttendances(JSON.parse(savedAttendances));
               if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
               if (savedPettyCash) setPettyCash(Number(savedPettyCash));
             }
@@ -252,6 +257,25 @@ export function useAppState() {
     };
     syncTransactions();
   }, [transactions, isLoaded]);
+
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("resto_attendances", JSON.stringify(attendances));
+
+    const syncAttendances = async () => {
+      if (attendances.length > 0) {
+        setIsSyncing(true);
+        const attendancesWithUser = attendances.map(att => ({
+          ...att,
+          user_id: TENANT_ID
+        }));
+        const { error } = await supabase.from('attendances').upsert(attendancesWithUser);
+        if (error) console.error('Attendance sync error:', error);
+        setIsSyncing(false);
+      }
+    };
+    syncAttendances();
+  }, [attendances, isLoaded]);
 
   React.useEffect(() => {
     if (!isLoaded) return;
@@ -497,6 +521,31 @@ export function useAppState() {
     return finalTransaction;
   };
 
+  const toggleAttendance = (employeeId: string, date: string, status: Attendance['status']) => {
+    const existingIndex = attendances.findIndex(a => a.employeeId === employeeId && a.date === date);
+    
+    if (existingIndex !== -1) {
+      if (attendances[existingIndex].status === status) {
+        // Toggle off: remove record
+        setAttendances(attendances.filter((_, i) => i !== existingIndex));
+      } else {
+        // Change status
+        const updated = [...attendances];
+        updated[existingIndex] = { ...updated[existingIndex], status };
+        setAttendances(updated);
+      }
+    } else {
+      // New record
+      const newAttendance: Attendance = {
+        id: crypto.randomUUID(),
+        employeeId,
+        date,
+        status
+      };
+      setAttendances([...attendances, newAttendance]);
+    }
+  };
+
   React.useEffect(() => {
     console.log("isLoaded changed to:", isLoaded);
   }, [isLoaded]);
@@ -526,6 +575,9 @@ export function useAppState() {
     shifts,
     setShifts,
     weeklyPattern,
-    setWeeklyPattern
+    setWeeklyPattern,
+    attendances,
+    setAttendances,
+    toggleAttendance
   };
 }
