@@ -11,7 +11,8 @@ import {
   Calculator,
   ArrowRight,
   Save,
-  HelpCircle
+  HelpCircle,
+  ClipboardCheck
 } from "lucide-react";
 import { Ingredient, Unit, Recipe } from "../types";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { CATEGORIES, UNITS } from "../constants";
 import { PriceInput } from "./PriceInput";
+import { VarianceReport } from "./VarianceReport";
 
 interface BahanManagerProps {
   ingredients: Ingredient[];
@@ -703,6 +705,3 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
     </div>
   );
 };
-// Import components and lucide
-import { VarianceReport } from "./VarianceReport";
-import { ClipboardCheck } from "lucide-react";

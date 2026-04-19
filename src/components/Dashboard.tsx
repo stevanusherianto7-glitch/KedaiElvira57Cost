@@ -17,6 +17,7 @@ import {
 import { Ingredient, Transaction, Expense, Recipe } from "../types";
 import { formatCurrency } from "@/lib/utils";
 import { Logo } from "./Logo";
+import { SalesSync } from "./SalesSync";
 
 interface DashboardProps {
   transactions: Transaction[];
@@ -176,6 +177,3 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
-
-// Import SalesSync at the top
-import { SalesSync } from "./SalesSync";
