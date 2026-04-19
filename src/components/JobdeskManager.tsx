@@ -135,12 +135,13 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
     }));
   };
 
-  const totalMonthlyPayroll = employees.reduce((acc, emp) => {
-    const hadirCount = attendances.filter(a => a.employeeId === emp.id && a.status === 'Hadir' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length;
-    return acc + (emp.salary / 26) * hadirCount;
-  }, 0);
+  const laborProgressBarRef = React.useRef<HTMLDivElement>(null);
 
-  const laborCostPercentage = totalMonthlyPayroll > 0 ? (totalMonthlyPayroll / 150000000) * 100 : 0;
+  React.useEffect(() => {
+    if (laborProgressBarRef.current) {
+      laborProgressBarRef.current.style.width = `${Math.min(laborCostPercentage, 100)}%`;
+    }
+  }, [laborCostPercentage]);
 
   const handleApplyPattern = (patternToApply: Record<string, ShiftType[]>) => {
     const newShiftsForMonth = generateShiftsFromPattern(
@@ -241,8 +242,8 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             <div className="flex items-center gap-2 relative z-10">
               <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
                 <div 
-                  className="bg-emerald-500 h-full transition-all duration-1000" 
-                  style={{ width: `${Math.min(laborCostPercentage, 100)}%` }}
+                  ref={laborProgressBarRef}
+                  className="bg-emerald-500 h-full transition-all duration-1000"
                 ></div>
               </div>
               <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap">{laborCostPercentage.toFixed(1)}% LABR</span>
