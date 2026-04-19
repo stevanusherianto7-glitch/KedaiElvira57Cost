@@ -53,7 +53,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
   deleteIngredient,
   handleExportInventoryPDF
 }) => {
-  const [viewMode, setViewMode] = React.useState<'menu-list' | 'ingredient-list'>('menu-list');
+  const [viewMode, setViewMode] = React.useState<'menu-list' | 'ingredient-list' | 'stock-opname'>('menu-list');
   const [selectedRecipeId, setSelectedRecipeId] = React.useState<string | null>(null);
   const [isAddingIngredient, setIsAddingIngredient] = React.useState(false);
   const [newIngredient, setNewIngredient] = React.useState<Partial<Ingredient>>({
@@ -137,7 +137,7 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            {viewMode === 'ingredient-list' && (
+            {(viewMode === 'ingredient-list' || viewMode === 'stock-opname') && (
               <button 
                 onClick={() => {
                   setViewMode('menu-list');
@@ -150,16 +150,26 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
               </button>
             )}
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-              {viewMode === 'menu-list' ? "Database Bahan Baku" : (selectedRecipe ? `Bahan: ${selectedRecipe.name}` : "Semua Bahan Baku")}
+              {viewMode === 'menu-list' ? "Database Bahan Baku" : viewMode === 'stock-opname' ? "Stock Opname" : (selectedRecipe ? `Bahan: ${selectedRecipe.name}` : "Semua Bahan Baku")}
             </h2>
           </div>
           <p className="text-slate-500 font-medium text-sm">
             {viewMode === 'menu-list' 
               ? "Pilih menu untuk melihat daftar bahan baku yang digunakan." 
-              : `Daftar komponen bahan baku ${selectedRecipe ? `untuk menu ${selectedRecipe.name}` : "lengkap"}.`}
+              : viewMode === 'stock-opname' ? "Bandingkan stok sistem dengan stok fisik." : `Daftar komponen bahan baku ${selectedRecipe ? `untuk menu ${selectedRecipe.name}` : "lengkap"}.`}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button 
+            onClick={() => setViewMode(viewMode === 'stock-opname' ? 'menu-list' : 'stock-opname')}
+            className={cn(
+              "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-2xl font-bold transition-all active:scale-95 text-sm sm:text-base border shadow-sm",
+              viewMode === 'stock-opname' ? "bg-blue-600 text-white border-blue-600 shadow-blue-600/20" : "bg-white text-slate-700 border-slate-100 hover:bg-slate-50"
+            )}
+          >
+            <ClipboardCheck className={cn("w-4 h-4 sm:w-5 sm:h-5", viewMode === 'stock-opname' ? "text-white" : "text-slate-400")} />
+            {viewMode === 'stock-opname' ? "Tutup Opname" : "Stock Opname"}
+          </button>
           <button 
             onClick={handleExportInventoryPDF}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-700 font-bold hover:bg-slate-50 transition-all active:scale-95 text-sm sm:text-base"
@@ -312,7 +322,9 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
       </div>
 
       <div className="space-y-8">
-        {viewMode === 'menu-list' ? (
+        {viewMode === 'stock-opname' ? (
+          <VarianceReport ingredients={ingredients} />
+        ) : viewMode === 'menu-list' ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
             {/* Master Data Card */}
             <Card 
@@ -691,3 +703,6 @@ export const BahanManager: React.FC<BahanManagerProps> = ({
     </div>
   );
 };
+// Import components and lucide
+import { VarianceReport } from "./VarianceReport";
+import { ClipboardCheck } from "lucide-react";

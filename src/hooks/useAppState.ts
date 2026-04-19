@@ -237,6 +237,20 @@ export function useAppState() {
   React.useEffect(() => {
     if (!isLoaded) return;
     localStorage.setItem("resto_transactions", JSON.stringify(transactions));
+
+    const syncTransactions = async () => {
+      if (transactions.length > 0) {
+        setIsSyncing(true);
+        const transactionsWithUser = transactions.map(trans => ({
+          ...trans,
+          user_id: TENANT_ID
+        }));
+        const { error } = await supabase.from('transactions').upsert(transactionsWithUser);
+        if (error) console.error('Transaction sync error:', error);
+        setIsSyncing(false);
+      }
+    };
+    syncTransactions();
   }, [transactions, isLoaded]);
 
   React.useEffect(() => {
@@ -443,6 +457,46 @@ export function useAppState() {
     setNewEmployee({ name: "", role: "", salary: 0 });
   };
 
+  const handleProcessTransaction = (transaction: Transaction) => {
+    // 1. Deduct Stock
+    const updatedIngredients = [...ingredients];
+    let totalTransactionHpp = 0;
+
+    transaction.items.forEach(item => {
+      const recipe = recipes.find(r => r.id === item.recipeId);
+      if (!recipe) return;
+
+      recipe.items.forEach(recipeItem => {
+        const ingredientIndex = updatedIngredients.findIndex(i => i.id === recipeItem.ingredientId);
+        if (ingredientIndex !== -1) {
+          const ing = updatedIngredients[ingredientIndex];
+          const amountToDeduct = recipeItem.quantityNeeded * item.quantity;
+          
+          // Calculate HPP contribution
+          const unitPrice = ing.purchasePrice / (ing.conversionValue || 1);
+          totalTransactionHpp += amountToDeduct * unitPrice;
+
+          // Update stock
+          updatedIngredients[ingredientIndex] = {
+            ...ing,
+            stockQuantity: Number((ing.stockQuantity - amountToDeduct).toFixed(2))
+          };
+        }
+      });
+    });
+
+    // 2. Add Transaction
+    const finalTransaction: Transaction = {
+      ...transaction,
+      totalHpp: totalTransactionHpp,
+      date: new Date().toISOString()
+    };
+
+    setIngredients(updatedIngredients);
+    setTransactions([finalTransaction, ...transactions]);
+    return finalTransaction;
+  };
+
   React.useEffect(() => {
     console.log("isLoaded changed to:", isLoaded);
   }, [isLoaded]);
@@ -469,6 +523,7 @@ export function useAppState() {
     handleAddIngredient,
     handleAddExpense,
     handleSaveEmployee,
+    handleProcessTransaction,
     shifts,
     setShifts,
     weeklyPattern,

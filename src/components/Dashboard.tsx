@@ -28,6 +28,7 @@ interface DashboardProps {
   handleRestore: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleClosing: () => void;
   onTabChange: (tab: string) => void;
+  onProcessTransaction: (transaction: Transaction) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -36,12 +37,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
   ingredients,
   expenses,
   pettyCash,
-  handleBackup,
   handleRestore,
   handleClosing,
-  onTabChange
+  onTabChange,
+  onProcessTransaction
 }) => {
+  const [isSalesSyncOpen, setIsSalesSyncOpen] = React.useState(false);
+
   const totalSales = transactions.reduce((acc, t) => acc + t.totalPrice, 0);
+  const totalHpp = transactions.reduce((acc, t) => acc + (t.totalHpp || 0), 0);
+  const grossProfit = totalSales - totalHpp;
   const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
   const lowStockCount = ingredients.filter(i => i.stockQuantity <= i.lowStockThreshold).length;
 
@@ -55,6 +60,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">ERP Engine</h2>
             <p className="text-slate-500 font-medium text-sm">Stok Gudang Real-time</p>
           </div>
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setIsSalesSyncOpen(true)}
+            className="h-14 px-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black shadow-xl shadow-emerald-600/20 active:scale-95 transition-all text-sm uppercase tracking-widest"
+          >
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            Input Sales
+          </Button>
         </div>
       </div>
 
@@ -70,6 +84,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Penjualan</p>
             <h3 className="text-xl font-bold text-slate-900">{formatCurrency(totalSales)}</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="premium-card">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <TrendingUp className="w-5 h-5 text-blue-500 group-hover:text-white transition-colors" />
+              </div>
+              <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-full uppercase tracking-widest">Gross</span>
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Laba Kotor</p>
+            <h3 className="text-xl font-bold text-blue-600">{formatCurrency(grossProfit)}</h3>
           </CardContent>
         </Card>
 
@@ -138,6 +165,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      <SalesSync 
+        isOpen={isSalesSyncOpen}
+        onClose={() => setIsSalesSyncOpen(false)}
+        recipes={recipes}
+        ingredients={ingredients}
+        onProcessTransaction={onProcessTransaction}
+      />
     </div>
   );
 };
+
+// Import SalesSync at the top
+import { SalesSync } from "./SalesSync";

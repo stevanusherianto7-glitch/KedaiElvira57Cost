@@ -100,6 +100,7 @@ export interface Transaction {
   date: string;
   items: TransactionItem[];
   totalPrice: number;
+  totalHpp: number;
   paymentMethod: 'Tunai' | 'QRIS';
   cashReceived?: number;
   change?: number;

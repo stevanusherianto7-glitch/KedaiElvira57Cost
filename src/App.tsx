@@ -179,6 +179,7 @@ function AppContent() {
             handleBackup={handleBackup}
             handleRestore={handleRestore}
             handleClosing={handleClosing}
+            onProcessTransaction={state.handleProcessTransaction}
           />
         )}
 
