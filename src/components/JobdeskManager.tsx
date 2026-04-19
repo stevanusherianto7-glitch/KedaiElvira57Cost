@@ -248,7 +248,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
               </div>
               <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap">{laborCostPercentage.toFixed(1)}% LABR</span>
             </div>
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform"></div>
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform pointer-events-none"></div>
           </div>
 
           <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 group hover:shadow-xl transition-all">
@@ -505,7 +505,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
                     })}
                   </div>
                 </div>
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
               </div>
 
               <div className="space-y-8">

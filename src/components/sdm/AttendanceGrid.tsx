@@ -196,7 +196,7 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
             </div>
           </div>
         </div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
       </Card>
     </div>
   );
