@@ -67,6 +67,7 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
           <button 
             onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() - 1)))}
             className="w-10 h-10 rounded-xl hover:bg-white hover:shadow-md flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all active:scale-90"
+            title="Satu Hari Sebelumnya"
           >
             <ChevronLeft size={20} />
           </button>
@@ -79,6 +80,7 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
           <button 
             onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() + 1)))}
             className="w-10 h-10 rounded-xl hover:bg-white hover:shadow-md flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all active:scale-90"
+            title="Satu Hari Berikutnya"
           >
             <ChevronRight size={20} />
           </button>
