@@ -54,6 +54,7 @@ import ScheduleGrid from "./scheduler/ScheduleGrid";
 import PatternManager from "./scheduler/PatternManager";
 import * as pdfService from "../services/pdfService";
 import { AttendanceGrid } from "./sdm/AttendanceGrid";
+import { ShiftCheatSheet } from "./sdm/ShiftCheatSheet";
 
 interface JobdeskManagerProps {
   employees: Employee[];
@@ -110,6 +111,7 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
   const [schedulerView, setSchedulerView] = React.useState<'grid' | 'pattern'>('grid');
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isMenuOpen, setIsMenuOpen] = React.useState(true);
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = React.useState(false);
   
   const gridRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
@@ -132,6 +134,13 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
       }
     }));
   };
+
+  const totalMonthlyPayroll = employees.reduce((acc, emp) => {
+    const hadirCount = attendances.filter(a => a.employeeId === emp.id && a.status === 'Hadir' && a.date.startsWith(new Date().toISOString().substring(0, 7))).length;
+    return acc + (emp.salary / 26) * hadirCount;
+  }, 0);
+
+  const laborCostPercentage = totalMonthlyPayroll > 0 ? (totalMonthlyPayroll / 150000000) * 100 : 0;
 
   const handleApplyPattern = (patternToApply: Record<string, ShiftType[]>) => {
     const newShiftsForMonth = generateShiftsFromPattern(
@@ -179,15 +188,15 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">Data Karyawan</h3>
             <p className="text-slate-400 text-sm leading-relaxed">Profil lengkap, jabatan, dan manajemen tim PSResto.</p>
-            <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-blue-500 transform group-hover:translate-x-2 transition-all" />
+            <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-sky-500 transform group-hover:translate-x-2 transition-all" />
           </div>
 
           <div onClick={() => navigateTo('jobdesk')} className="sdm-dashboard-card group">
             <div className="w-16 h-16 bg-amber-50 rounded-3xl flex items-center justify-center mb-6 group-hover:bg-amber-500 transition-colors">
-              <Zap className="w-8 h-8 text-amber-500 group-hover:text-white transition-colors" />
+              <ClipboardCheck className="w-8 h-8 text-amber-500 group-hover:text-white transition-colors" />
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2">Jobdesk (SPO)</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">Standard Operating Procedure dan pembagian tugas harian.</p>
+            <p className="text-slate-400 text-sm leading-relaxed">Standar Prosedur Operasional dan tanggung jawab tim.</p>
             <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-amber-500 transform group-hover:translate-x-2 transition-all" />
           </div>
 
@@ -217,7 +226,62 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             <p className="text-slate-400 text-sm leading-relaxed">Monitoring kehadiran tim secara real-time dan terintegrasi.</p>
             <ChevronRight className="absolute bottom-8 right-8 w-6 h-6 text-slate-200 group-hover:text-rose-500 transform group-hover:translate-x-2 transition-all" />
           </div>
+        </div>
 
+        {/* Modern Summary Widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 mb-8">
+          <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white space-y-4 relative overflow-hidden group border border-slate-800">
+            <div className="flex items-center justify-between relative z-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Total Payroll Bulan Ini</p>
+              <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center">
+                <Calculator className="w-4 h-4 text-emerald-400" />
+              </div>
+            </div>
+            <p className="text-3xl font-black italic tracking-tight relative z-10">{formatCurrency(totalMonthlyPayroll)}</p>
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                <div 
+                  className="bg-emerald-500 h-full transition-all duration-1000" 
+                  style={{ width: `${Math.min(laborCostPercentage, 100)}%` }}
+                ></div>
+              </div>
+              <span className="text-[10px] font-black text-emerald-400 whitespace-nowrap">{laborCostPercentage.toFixed(1)}% LABR</span>
+            </div>
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-125 transition-transform"></div>
+          </div>
+
+          <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 group hover:shadow-xl transition-all">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Jam Operasional</p>
+              <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">
+                <Clock className="w-4 h-4 text-indigo-600" />
+              </div>
+            </div>
+            <p className="text-xl font-black text-slate-900 tracking-tight uppercase">Shift Cheat Sheet</p>
+            <button 
+              onClick={() => setIsCheatSheetOpen(true)}
+              className="w-full h-12 bg-indigo-50 text-indigo-600 font-black text-xs rounded-2xl hover:bg-slate-900 hover:text-white transition-all active:scale-95 tracking-widest uppercase italic"
+            >
+              Lihat Panduan ➔
+            </button>
+          </div>
+
+          <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 group hover:shadow-xl transition-all">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Status Kehadiran</p>
+              <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-rose-600" />
+              </div>
+            </div>
+            <p className="text-xl font-black text-slate-900 tracking-tight uppercase">Presence Rate</p>
+            <div className="flex items-end gap-2">
+              <p className="text-3xl font-black italic text-slate-900">92%</p>
+              <p className="text-[8px] font-black text-emerald-600 uppercase mb-2">GOOD PERFORMANCE</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Dialog open={isAddingEmployee} onOpenChange={setIsAddingEmployee}>
             <DialogTrigger asChild>
               <div className="sdm-dashboard-card group border-dashed border-2 border-slate-200 bg-slate-50/30">
@@ -586,6 +650,11 @@ export const JobdeskManager: React.FC<JobdeskManagerProps> = ({
             onToggleAttendance={toggleAttendance}
           />
         )}
+
+        <ShiftCheatSheet 
+          isOpen={isCheatSheetOpen} 
+          onClose={() => setIsCheatSheetOpen(false)} 
+        />
         </div>
       </div>
     </div>

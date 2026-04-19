@@ -4,7 +4,7 @@ import { CATEGORIES } from "../constants";
 import { supabase } from "../lib/supabase";
 
 // Fixed tenant ID for this resto (no auth required)
-const TENANT_ID = 'elvera57-pawon-salam-resto';
+const TENANT_ID = 'e57a0505-1234-5678-90ab-c0de57f17ac1';
 
 // Helper: convert Employee camelCase to Supabase snake_case
 const employeeToRow = (emp: Employee) => ({

@@ -123,6 +123,33 @@ export const AttendanceGrid: React.FC<AttendanceGridProps> = ({
                   ))}
                 </div>
 
+                {/* 7-Day Mini Heatmap */}
+                <div className="space-y-3">
+                  <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Histori 7 Hari Terakhir</p>
+                  <div className="flex gap-1.5">
+                    {Array.from({ length: 7 }).map((_, i) => {
+                      const d = new Date(selectedDate);
+                      d.setDate(d.getDate() - (6 - i));
+                      const dStr = d.toISOString().split('T')[0];
+                      const s = getAttendanceStatus(emp.id, dStr);
+                      return (
+                        <div 
+                          key={i} 
+                          title={dStr}
+                          className={cn(
+                            "flex-1 h-1.5 rounded-full transition-all",
+                            s === 'Hadir' ? "bg-emerald-500" :
+                            s === 'Izin' ? "bg-blue-400" :
+                            s === 'Sakit' ? "bg-amber-400" :
+                            s === 'Alpha' ? "bg-rose-400" :
+                            "bg-slate-100"
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
                   <div>
                     <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Gaji Harian (Est.)</p>
